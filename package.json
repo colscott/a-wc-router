@@ -1,0 +1,38 @@
+{
+  "name": "routing-web-component",
+  "version": "0.0.1",
+  "description": "Web Component Router",
+  "main": "./src/routes-router.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "axe-core": "^3.1.2",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "pwa-helpers": "^0.9.0",
+    "stacky": "^1.3.1",
+    "wct-mocha": "^1.0.0",
+    "web-component-tester": "^6.9.2"
+  },
+  "scripts": {
+    "test": "wct"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/colscott/routing-web-component.git"
+  },
+  "keywords": [
+    "routing",
+    "web",
+    "component",
+    "router"
+  ],
+  "author": "colin scott",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/colscott/routing-web-component/issues"
+  },
+  "homepage": "https://github.com/colscott/routing-web-component#readme"
+}
