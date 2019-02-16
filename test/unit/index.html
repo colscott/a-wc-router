@@ -26,8 +26,7 @@
 </head>
 
 <body>
-  // TODO configure router to ignore this
-  <a href="/components/routing-web-component/test/unit/index.html">rerun</a>
+  <a href="/components/routing-web-component/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
   <div id="mocha">
     <p><a href=".">Index</a></p>
   </div>
@@ -35,6 +34,7 @@
   <div id="fixtures"></div>
 
   <!-- Test set up -->
+  <a-outlet name="myoutlet1" id="myoutlet1"></a-outlet>
   <a-router id="router-a">
     <a-outlet id="outletA"></a-outlet>
     <a-route path="/template" id="template-route"><template>Hello Template</template></a-route>
@@ -121,28 +121,70 @@
     let expect = chai.expect;
     var outlet = document.getElementById('outletA');
 
-    var clickAndTest = function (linkDetails, expectedTextOrHtmlContent, done, outletId) {
+    var click = function(linkDetails) {
       let link = document.createElement('A');
       link.href = linkDetails.href;
       linkDetails.target && (link.target = linkDetails.target);
       document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    var clickAndTest = function (linkDetails, expectedTextOrHtmlContent, done, outletId) {
+      outletId = outletId || 'outletA';
       console.group('test: ' + linkDetails.href)
+      
       document.body.addEventListener("onOutletUpdated", function (event) {
         console.log('outlet updated: ' + event.target.id + '-----' + event.target.innerText);
         if (!outletId || outletId === event.target.id) {
           if (expectedTextOrHtmlContent instanceof Function)
             expectedTextOrHtmlContent(event.target);
           else
-            expect(outlet.innerHTML).to.contains(expectedTextOrHtmlContent);
+            expect(event.target.innerHTML).to.contains(expectedTextOrHtmlContent);
           document.body.removeEventListener("onOutletUpdated", arguments.callee);
-          link.remove();
           console.log('call done for ' + linkDetails.href);
           console.groupEnd();
           done && done();
         }
       });
-      link.click();
+      
+      click(linkDetails);
     };
+
+    var clickAndNotHandle = function(linkDetails, done) {
+      console.group('test: ' + linkDetails.href);
+
+      window.addEventListener('click', (event) => {
+        window.removeEventListener('click', arguments.callee);
+        event.preventDefault();
+      }, false);
+      
+      document.body.addEventListener("onRouteNotHandled", function (event) {
+        document.body.removeEventListener("onRouteNotHandled", arguments.callee);
+        console.log('route not handled: ' + linkDetails.href);
+        console.log('call done for ' + linkDetails.href);
+        console.groupEnd();
+        done && done();
+      });
+
+      click(linkDetails);
+    };
+
+    describe('named outlets', function() {
+      it('should show named outlet', function(done) {
+        OutletElement.setOutlet('myoutlet1', 'test-dummy');
+        document.body.addEventListener("onOutletUpdated", function (event) {
+          document.body.removeEventListener("onOutletUpdated", arguments.callee);
+          let content = document.querySelector("[name='myoutlet1']").innerHTML;
+          expect(content).to.contain('test-dummy');
+          done();
+        });
+      });
+
+      it('updates for clicked links', function(done) {
+        clickAndTest({ href: "(myoutlet1:test-dummy(./test-dummy.js):requiredParam=named outlet,testing)" }, 'Test Element named outlet,testing', done, 'myoutlet1');
+      });
+    });
 
     describe('routes-router', function () {
       describe('simple flat', function () {
@@ -184,7 +226,7 @@
         // });
 
         it('shouldn\'t handle different base urls', function (done) {
-          clickAndTest({ href: "/template" }, 'catach all - NotFound2', done);
+          clickAndNotHandle({ href: "/template" }, done);
         });
 
         it('absolute path should match', function (done) {
@@ -196,24 +238,34 @@
         it('Should route auxiliary', function(done) {
           let routerA = document.getElementById('router-a');
           let auxiliaryRouting = document.getElementById('auxiliary-routing').content.cloneNode(true);
+          let i = 2;
           routerA.parentNode.insertBefore(auxiliaryRouting, routerA.nextSibling);
-          clickAndTest(
-            { href: "template::main/(main_view1/:10::main2_view1/:99)::secondary/(sec_view1/:54::secondary2_view1/:43)" },
-            'Hello Template', 
-            function(){
-              setTimeout(function(){
-                expect(document.getElementById('router-a').innerText)
-                  .to.equal('Hello Template ');
+          document.body.addEventListener("onOutletUpdated", function (event) {
+            console.log('outlet updated: ' + event.target.id + '-----' + event.target.innerText);
+            expect(document.getElementById('router-a').innerText)
+                  .to.contain('Hello Template');
+            switch (event.target.id) {
+              case 'main2_view1':
                 expect(document.getElementById('routerb').innerText)
-                  .to.equal('Main View 1 Main2 View 1 ');
+                .to.equal('Main View 1 Main2 View 1');
+                document.getElementById('routerb').remove();
+                i--;
+                break;
+              case 'sec_v2':
                 expect(document.getElementById('routerc').innerText)
                   .to.equal('Sec View 1 Sec2 View 1');
-
-                document.getElementById('routerb').remove();
-                document.getElementById('routerc').remove();
-                done();
-                }, 200);
-           });
+                  document.getElementById('routerc').remove();
+                i--
+                break;
+            }
+            if(!i) {
+              console.groupEnd();
+              document.body.removeEventListener("onOutletUpdated", arguments.callee);
+              done();
+            }
+          });
+          click(
+            { href: "(template)::main/(main_view1/:10::main2_view1/:99)::secondary/(sec_view1/:54::secondary2_view1/:43)" });
         });
       });
       

@@ -1,5 +1,4 @@
 class RouterElement extends HTMLElement {
-
   /** 
    * Event handler for handling when child router is added.
    * This function is called in the scope of RouterElement for the top level collection of routers and instacnes of RotuerElement for nested router collections.
@@ -89,6 +88,20 @@ class RouterElement extends HTMLElement {
     var href = RouterElement._getSameOriginLinkHref(event);
 
     if (!href) {
+      /**
+       * Event that fires if a link is not handled due to it not being same origin or base url.
+       * @event RouterElement#onRouteCancelled
+       * @type CustomEvent
+       * @property {Object} details - The event details
+       * @property {RouteElement} details.url - The url that was trying to be matched.
+       */
+      event.target.dispatchEvent(
+        new CustomEvent(
+          'onRouteNotHandled',
+          {
+            bubbles: true,
+            composed: true,
+            detail: { href }}));
       return;
     }
 
@@ -157,32 +170,79 @@ class RouterElement extends HTMLElement {
    * @param {string} path 
    * @param {string} query 
    * @param {string} hash 
-   * @param {RouterElement[]} routers 
-   * @param [{RouterElement}] lastRouter - The last router that just performed a match. Routing will contiune from the next router.
+   * @param {RouterElement[]} routers
    */
-  static performMatchOnRouters(url, path, query, hash, routers, lastRouter) {
+  static performMatchOnRouters(url, path, query, hash, routers) {
     // TODO query string data should be placed on RouterElement so it's accessible across all outlets. It's regarded as shared data across the routers.
     // TODO Maybe have a way to regiser for changes to query string so routes can react
     // TODO auxilary routers - start unit testing
     if (url[0] === '(') {
       url = url.substr(1,url.length - 2);
     }
-    let urls = routers.length > 1 ? RouterElement.splitUrlIntoRouters(url) : [url];
+    let urls = RouterElement.splitUrlIntoRouters(url);
+    let urlsWithoutNamedOutlets = [];
+    let urlsWithNamedOutlets = [];
+
+    // -------------------------------------------------------
+    // TODO unit test named outlets using a clicked a tag link
+    // -------------------------------------------------------
+
+    for(let i = 0, iLen = urls.length; i < iLen; i++) {
+      let namedOutlet = RouterElement.isNamedOutlet(urls[i]);
+      if(namedOutlet) {
+        urlsWithNamedOutlets.push(namedOutlet);
+        OutletElement.setOutlet(namedOutlet.name, namedOutlet.elementTag, namedOutlet.data, {import: namedOutlet.import});
+      } else if(urls[i]) {
+        urlsWithoutNamedOutlets.push(urls[i]);
+      }
+    }
 
     let i = 0;
-    if (lastRouter) {
-      i = routers.indexOf(lastRouter) + 1;
-    }
     for (let iLen = routers.length; i < iLen; i++) {
       let router = routers[i];
-      let match = router.performMatchOnRouter(urls[i] || '');
-      let remainder = match && match.remainder;
-      // if (remainder !== null) {
-      //   RouterElement.performMatchOnRouters(remainder, path, query, hash, router._routers)
-      // } else if (router._routers.length) {
-      //   // TODO throw error because there was no router
-      // }
+      if (urlsWithoutNamedOutlets[i]) {
+        router.performMatchOnRouter(urlsWithoutNamedOutlets[i] || '');
+      }
     }
+  }
+
+
+  //TODO outlet to url....
+
+  /**
+   * Parses custom element info from a url:
+   * outletName:element-tag:param1/value1/param2/value2
+   * @param {string} url
+   * @returns {object}  
+   */
+  static isNamedOutlet(url) {
+    if (url[0] === '/') {
+      url = url.substr(1);
+    }
+
+    if (url[0] === '(') {
+      url = url.substr(1, url.length - 2);
+    }
+
+    let match = url.match(/^\/?\(?(\w+)\:([\w-]+)(\(.*?\))?(?:\:(.+))?\)?/);
+    if (match) {
+      var data = {};
+      
+      if (match[4]) {
+        var keyValues = match[4].split('&');
+        for (var i = 0, iLen = keyValues.length; i < iLen; i++) {
+          let keyValue = keyValues[i].split('=');
+          data[decodeURIComponent(keyValue[0])] = decodeURIComponent(keyValue[1]);
+        }
+      }
+      return {
+        name: match[1],
+        elementTag: match[2],
+        import: match[3] && match[3].substr(1, match[3].length - 2),
+        data: data
+      };
+    }
+    return null;
   }
 
   //TODO Unit test
@@ -207,6 +267,16 @@ class RouterElement extends HTMLElement {
     if (i > lastI) {
       urls.push(url.substr(lastI));
     }
+
+    for (let j = 0, jLen = urls.length; j < jLen; j++) {
+      if (urls[j][0] === '/') {
+        urls[j] = urls[j].substr(1);
+      }
+      if (urls[j][0] === '(' && urls[j][urls[j].length-1] === ')') {
+        urls[j] = urls[j].substr(1, urls[j].length - 2);
+      }
+    }
+
     return urls;
   }
 
@@ -278,6 +348,7 @@ class RouterElement extends HTMLElement {
 
       // Listen for top level routers being added
       window.addEventListener('onRouterAdded', RouterElement.handlerAddRouter.bind(RouterElement), false);
+      window.addEventListener('onNamedOutletAdded', RouterElement.handlerAddNamdedOutlet.bind(RouterElement), false);
 
       RouterElement.changeUrl(decodeURIComponent(location.pathname));
     }
@@ -479,6 +550,11 @@ class RouterElement extends HTMLElement {
     }
 
     var href = anchor.href;
+    // If link is different to base path, don't intercept.
+    if (href.indexOf(document.baseURI) !== 0) {
+      return null;
+    }
+
     var hrefEsacped = href.replace(/::/g, '$_$_');
 
     // It only makes sense for us to intercept same-origin navigations.

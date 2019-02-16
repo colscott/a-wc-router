@@ -172,12 +172,11 @@ class RouteElement extends HTMLElement {
     if (!content) {
       let importAttr = this.getAttribute('import');
       let tagName = this.getAttribute('element');
-      if (importAttr && customElements.get(tagName) === undefined) {
-          await import(importAttr);
-      }
+
+      await RouteElement.importCustomElement(importAttr, tagName);
 
       if (tagName) {
-        // TODO support if tagName is a function that is called and will reutnr the content
+        // TODO support if tagName is a function that is called and will return the content
         // content = tagName(attributes);
         content = document.createElement(tagName);
       }
@@ -188,15 +187,25 @@ class RouteElement extends HTMLElement {
       }
     }
 
-    for (let name in attributes) {
-        if (name.indexOf('.') === 0) {
-          content[name.substr(1)] = attributes[name];
-        } else {
-          content.setAttribute(name, attributes[name]);
-        }
-    }
+    RouteElement.setData(content, attributes);
 
     return this.content = content;
+  }
+
+  static async importCustomElement(importSrc, tagName) {
+    if (importSrc && customElements.get(tagName) === undefined) {
+      await import(importSrc);
+    }
+  }
+
+  static setData(target, data) {
+    for (let name in data) {
+      if (name[0] === '.') {
+        target[name.substr(1)] = data[name];
+      } else {
+        target.setAttribute(name, data[name]);
+      }
+    }
   }
 
   /**
