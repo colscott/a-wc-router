@@ -248,13 +248,13 @@
               case 'main2_view1':
                 expect(document.getElementById('routerb').innerText)
                 .to.equal('Main View 1 Main2 View 1');
-                document.getElementById('routerb').remove();
+                // document.getElementById('routerb').remove();
                 i--;
                 break;
               case 'sec_v2':
                 expect(document.getElementById('routerc').innerText)
                   .to.equal('Sec View 1 Sec2 View 1');
-                  document.getElementById('routerc').remove();
+                  // document.getElementById('routerc').remove();
                 i--
                 break;
             }
@@ -265,7 +265,7 @@
             }
           });
           click(
-            { href: "(template)::main/(main_view1/:10::main2_view1/:99)::secondary/(sec_view1/:54::secondary2_view1/:43)" });
+            { href: "(template)::main/(main_view1/10::main2_view1/99)::secondary/(sec_view1/54::secondary2_view1/43)" });
         });
       });
       
@@ -408,11 +408,11 @@
         });
       });
 
-      describe('Outlet Events', function() {
-        // it('should match nested', function(done) {
-        //   clickAndTest({ href: 'nested/template_nested' }, 'Hello Nested', done);
-        // });
-      });
+      // describe('Outlet Events', function() {
+      //   it('should match nested', function(done) {
+      //     clickAndTest({ href: 'nested/template_nested' }, 'Hello Nested', done);
+      //   });
+      // });
 
       // describe('test hash routing', function() {
       //   it('should match', function(done) {

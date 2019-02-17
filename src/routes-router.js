@@ -60,18 +60,6 @@ class RouterElement extends HTMLElement {
     }
 
     var newUrl = RouterElement._getUrl(path, query, hash);
-    // Need to use a full URL in case the containing page has a base URI.
-    var fullNewUrl = new URL(newUrl, window.location.protocol + '//' + window.location.host).href;
-    var now = window.performance.now();
-    var shouldReplace = oldRoute._lastChangedAt + RouterElement._dwellTime > now;
-    oldRoute._lastChangedAt = now;
-
-    if (shouldReplace) {
-      window.history.replaceState({}, '', fullNewUrl);
-    } else {
-      window.history.pushState({}, '', fullNewUrl);
-    }
-
     RouterElement.dispatch(newUrl, path, query, hash);
   }
 
@@ -113,11 +101,10 @@ class RouterElement extends HTMLElement {
       return;
     }
 
-    window.history.pushState({}, '', href);
-
+    let url = new URL(href);
     let hash = RouterElement._getHash();
-    let path = window.decodeURIComponent(window.location.pathname);
-    let query = window.location.search.substring(1);
+    let path = window.decodeURIComponent(url.pathname);
+    let query = url.search.substring(1);
     var newUrl = RouterElement._getUrl(path, query, hash);
     RouterElement.dispatch(newUrl, path, query, hash);
   }
@@ -132,9 +119,9 @@ class RouterElement extends HTMLElement {
    */
   static dispatch(url, path, query, hash) {
     let basePath = RouterElement.baseUrlSansHost();
-    url = url.substr(basePath.length);
+    let shortUrl = url.substr(basePath.length);
     RouterElement._route = {
-      url: url,
+      url: shortUrl,
       path: path,
       query: query,
       hash: hash
@@ -155,13 +142,66 @@ class RouterElement extends HTMLElement {
           {
             bubbles: true,
             composed: true,
-            detail: { url }}));
+            detail: { shortUrl }}));
       return;
     }
 
     RouterElement._activeRouters = [];
 
-    RouterElement.performMatchOnRouters(url, path, query, hash, RouterElement._routers);
+    RouterElement.performMatchOnRouters(shortUrl, path, query, hash, RouterElement._routers);
+    RouterElement.updateHistory(url);
+  }
+
+  /** Updates the location history with the new href */
+  static updateHistory(href) {
+    // TODO Generate the URL rather than using the url passed in as it might be missing named routers
+    let url = RouterElement.getUrlState();
+
+    if (url.length === 2) {
+      url = href;
+    } else {
+      url = document.baseURI + url;
+    }
+
+    // Need to use a full URL in case the containing page has a base URI.
+    let fullNewUrl = new URL(url, window.location.protocol + '//' + window.location.host).href;
+    let oldRoute = RouterElement._route;
+    let now = window.performance.now();
+    let shouldReplace = oldRoute._lastChangedAt + RouterElement._dwellTime > now;
+    oldRoute._lastChangedAt = now;
+
+    if (shouldReplace) {
+      window.history.replaceState({}, '', fullNewUrl);
+    } else {
+      window.history.pushState({}, '', fullNewUrl);
+    }
+  }
+
+  /** Gets the current URL state based on currently active routers and outlets. */
+  static getUrlState() {
+    let url = '';
+    let assignedOutlets = OutletElement.assignedOutlets;
+    if (assignedOutlets) {
+      for (let outLetName in assignedOutlets) {
+        if (url.length) {
+          url += '::';
+        }
+        url += OutletElement.generateUrlFragment(assignedOutlets[outLetName]);
+      }
+    }
+
+    if (RouterElement._routers) {
+      for (let i = 0, iLen = RouterElement._routers.length; i < iLen; i++) {
+        var nextFrag = RouterElement._routers[i].generateUrlFragment();
+        if (nextFrag) {
+          if (url.length) {
+            url += '::';
+          }
+          url += nextFrag;
+        }
+      }
+    }
+    return url;
   }
 
   /**
@@ -191,8 +231,8 @@ class RouterElement extends HTMLElement {
       let namedOutlet = RouterElement.isNamedOutlet(urls[i]);
       if(namedOutlet) {
         urlsWithNamedOutlets.push(namedOutlet);
-        OutletElement.setOutlet(namedOutlet.name, namedOutlet.elementTag, namedOutlet.data, {import: namedOutlet.import});
-      } else if(urls[i]) {
+        OutletElement.setOutlet(namedOutlet.name, namedOutlet.elementTag, namedOutlet.data, {import: namedOutlet.import}, true);
+      } else {
         urlsWithoutNamedOutlets.push(urls[i]);
       }
     }
@@ -226,13 +266,13 @@ class RouterElement extends HTMLElement {
 
     let match = url.match(/^\/?\(?(\w+)\:([\w-]+)(\(.*?\))?(?:\:(.+))?\)?/);
     if (match) {
-      var data = {};
+      var data = new Map();
       
       if (match[4]) {
         var keyValues = match[4].split('&');
         for (var i = 0, iLen = keyValues.length; i < iLen; i++) {
           let keyValue = keyValues[i].split('=');
-          data[decodeURIComponent(keyValue[0])] = decodeURIComponent(keyValue[1]);
+          data.set(decodeURIComponent(keyValue[0]), decodeURIComponent(keyValue[1]));
         }
       }
       return {
@@ -348,7 +388,6 @@ class RouterElement extends HTMLElement {
 
       // Listen for top level routers being added
       window.addEventListener('onRouterAdded', RouterElement.handlerAddRouter.bind(RouterElement), false);
-      window.addEventListener('onNamedOutletAdded', RouterElement.handlerAddNamdedOutlet.bind(RouterElement), false);
 
       RouterElement.changeUrl(decodeURIComponent(location.pathname));
     }
@@ -479,6 +518,32 @@ class RouterElement extends HTMLElement {
         this._parentRouter._currentMatch.remainder = '';
       }
     }
+  }
+
+  generateUrlFragment() {
+    let match = this._currentMatch;
+    if (!match) {
+      return '';
+    }
+
+    let urlFrag = match.url;
+    
+    if (match.remainder) {
+      urlFrag += match.remainder;
+    }
+
+    if (this._routers && this._routers.length) {
+      urlFrag += '/(';
+      for (let i = 0, iLen = this._routers.length; i < iLen; i++) {
+        if (i > 0) {
+          urlFrag += '::';
+        }
+        urlFrag += this._routers[i].generateUrlFragment();
+      }
+      urlFrag += ')';
+    }
+
+    return urlFrag;
   }
 
   /**

@@ -80,7 +80,7 @@ class RouteElement extends HTMLElement {
     } else {
       const pathSegments = this._createPathSegments(path);
       //console.log(urlSegments, pathSegments);
-      const data = {};
+      const data = new Map();
 
       let max = Math.max(urlSegments.length, pathSegments.length);
       let ret;
@@ -95,9 +95,9 @@ class RouteElement extends HTMLElement {
               match = null;
               break;
             }
-            data[param] = decodeURIComponent(val);
+            data.set(param, decodeURIComponent(val));
             if (plus || star) {
-              data[param] = urlSegments.slice(i).map(decodeURIComponent).join('/');
+              data.set(param, urlSegments.slice(i).map(decodeURIComponent).join('/'));
               match = {
                 url: url,
                 remainder: '',
@@ -199,13 +199,13 @@ class RouteElement extends HTMLElement {
   }
 
   static setData(target, data) {
-    for (let name in data) {
-      if (name[0] === '.') {
-        target[name.substr(1)] = data[name];
-      } else {
-        target.setAttribute(name, data[name]);
-      }
-    }
+    data.forEach((v,k) => {
+        if (k[0] === '.') {
+          target[k.substr(1)] = v;
+        } else {
+          target.setAttribute(k, v);
+        }
+      });
   }
 
   /**

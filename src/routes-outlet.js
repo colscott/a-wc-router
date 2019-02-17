@@ -18,9 +18,9 @@ class OutletElement extends HTMLElement {
 
           OutletElement.namedOutletRegistry[this.outletName] = this;
 
-          if (OutletElement.assignedOutlets && OutletElement.assignedOutlets[outletName]) {
-            let assignedOutlet = OutletElement.assignedOutlets[outletName];
-            OutletElement.setOutlet(outletName, assignedOutlet.elementTag, assignedOutlet.data, assignedOutlet.options);
+          if (OutletElement.assignedOutlets[this.outletName]) {
+            let assignedOutlet = OutletElement.assignedOutlets[this.outletName];
+            OutletElement.setOutlet(this.outletName, assignedOutlet.elementTag, assignedOutlet.data, assignedOutlet.options);
           }
         }
       }
@@ -41,8 +41,22 @@ class OutletElement extends HTMLElement {
    * @param {object} options - 
    * @property {string} options.import - A module to load that contains the custom element definition. Only used if the custom element has not bee registered already.
    */
-  static async setOutlet(outletName, elementTag, data, options) {
+  static async setOutlet(outletName, elementTag, data, options, supressUrlGeneration) {
     options = options || {};
+    if (data instanceof Map == false) {
+      data = new Map(Object.entries(data || {}));
+    }
+
+    let assignedOutlet = OutletElement.assignedOutlets[outletName] = {
+      outletName: outletName,
+      elementTag,
+      data,
+      options
+    };
+
+    // OutletElement.setOutlet(outletName, assignedOutlet.elementTag, assignedOutlet.data, assignedOutlet.options);
+
+    //TODO Trigger an update of the url
 
     let namedOutlet = (OutletElement.namedOutletRegistry || {})[outletName];
     if (!namedOutlet) {
@@ -57,9 +71,28 @@ class OutletElement extends HTMLElement {
 
     namedOutlet.renderContent(element);
 
-    //TODO change the URL
+    if (!supressUrlGeneration) {
+      RouterElement.updateHistory('');
+    }
 
     return element;
+  }
+
+  static generateUrlFragment(assignedOutlet) {
+    let details = assignedOutlet;
+    let urlFrag = `(${details.outletName}:${details.elementTag}`;
+    
+    if (details.options.import) {
+      urlFrag += `(${details.options.import})`;
+    }
+
+    if (details.data) {
+      details.data.forEach((v,k) => {
+        urlFrag += `:${k}=${v}`;
+      });
+    }
+
+    return urlFrag + ')';
   }
 
   constructor() {
@@ -100,5 +133,7 @@ class OutletElement extends HTMLElement {
           detail: { }}));
   }
 }
+
+OutletElement.assignedOutlets = {};
 
 window.customElements.define('a-outlet', OutletElement);
