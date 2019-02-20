@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <base href="/components/routing-web-component/test/unit/">
+  <base href="/components/a-wc-router/test/unit/">
   </base>
 
   <meta charset="utf-8">
@@ -20,13 +20,14 @@
   <script src="../../node_modules/mocha/mocha.js"></script>
 
   <!-- Scripts being tested -->
+  <script src="../../src/named-routing.js"></script>
   <script src="../../src/routes-router.js"></script>
   <script src="../../src/routes-route.js"></script>
   <script src="../../src/routes-outlet.js"></script>
 </head>
 
 <body>
-  <a href="/components/routing-web-component/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
+  <a href="/components/a-wc-router/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
   <div id="mocha">
     <p><a href=".">Index</a></p>
   </div>
@@ -43,7 +44,7 @@
     <a-route path="/nested">
       <template>
         <p>Content with nested router</p>
-        <a-router>
+        <a-router name="router-a-b">
           <a-outlet id="outletB"></a-outlet>
           <a-route path="/template_nested"><template>Hello Nested</template></a-route>
           <a-route path="/webcomponent_nested" import='./test-dummy.js' element="test-dummy"></a-route>
@@ -172,17 +173,27 @@
 
     describe('named outlets', function() {
       it('should show named outlet', function(done) {
-        OutletElement.setOutlet('myoutlet1', 'test-dummy');
         document.body.addEventListener("onOutletUpdated", function (event) {
           document.body.removeEventListener("onOutletUpdated", arguments.callee);
           let content = document.querySelector("[name='myoutlet1']").innerHTML;
           expect(content).to.contain('test-dummy');
           done();
         });
+        click({ href: '(myoutlet1:test-dummy(./test-dummy.js))'});
       });
 
       it('updates for clicked links', function(done) {
         clickAndTest({ href: "(myoutlet1:test-dummy(./test-dummy.js):requiredParam=named outlet,testing)" }, 'Test Element named outlet,testing', done, 'myoutlet1');
+      });
+    });
+
+    describe('named routers', function() {
+      it('updates for clicked links', function(done) {
+        click({ href: "nested/webcomponent_nested" });
+        clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', () => {
+          NamedRouting.removeAssignment('router-a-b');
+          done();
+        }, 'outletB');
       });
     });
 
@@ -230,7 +241,7 @@
         });
 
         it('absolute path should match', function (done) {
-          clickAndTest({ href: "/components/routing-web-component/test/unit/template" }, 'Hello Template', done);
+          clickAndTest({ href: "/components/a-wc-router/test/unit/template" }, 'Hello Template', done);
         });
       });
 
