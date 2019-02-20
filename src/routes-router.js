@@ -179,16 +179,7 @@ class RouterElement extends HTMLElement {
 
   /** Gets the current URL state based on currently active routers and outlets. */
   static getUrlState() {
-    let url = '';
-    let assignedOutlets = OutletElement.assignedOutlets;
-    if (assignedOutlets) {
-      for (let outLetName in assignedOutlets) {
-        if (url.length) {
-          url += '::';
-        }
-        url += OutletElement.generateUrlFragment(assignedOutlets[outLetName]);
-      }
-    }
+    let url = NamedRouting.generateNamedItemsUrl();
 
     if (RouterElement._routers) {
       for (let i = 0, iLen = RouterElement._routers.length; i < iLen; i++) {
@@ -221,18 +212,9 @@ class RouterElement extends HTMLElement {
     }
     let urls = RouterElement.splitUrlIntoRouters(url);
     let urlsWithoutNamedOutlets = [];
-    let urlsWithNamedOutlets = [];
-
-    // -------------------------------------------------------
-    // TODO unit test named outlets using a clicked a tag link
-    // -------------------------------------------------------
 
     for(let i = 0, iLen = urls.length; i < iLen; i++) {
-      let namedOutlet = RouterElement.isNamedOutlet(urls[i]);
-      if(namedOutlet) {
-        urlsWithNamedOutlets.push(namedOutlet);
-        OutletElement.setOutlet(namedOutlet.name, namedOutlet.elementTag, namedOutlet.data, {import: namedOutlet.import}, true);
-      } else {
+      if(!NamedRouting.parseNamedItem(urls[i])) {
         urlsWithoutNamedOutlets.push(urls[i]);
       }
     }
@@ -244,45 +226,6 @@ class RouterElement extends HTMLElement {
         router.performMatchOnRouter(urlsWithoutNamedOutlets[i] || '');
       }
     }
-  }
-
-
-  //TODO outlet to url....
-
-  /**
-   * Parses custom element info from a url:
-   * outletName:element-tag:param1/value1/param2/value2
-   * @param {string} url
-   * @returns {object}  
-   */
-  static isNamedOutlet(url) {
-    if (url[0] === '/') {
-      url = url.substr(1);
-    }
-
-    if (url[0] === '(') {
-      url = url.substr(1, url.length - 2);
-    }
-
-    let match = url.match(/^\/?\(?(\w+)\:([\w-]+)(\(.*?\))?(?:\:(.+))?\)?/);
-    if (match) {
-      var data = new Map();
-      
-      if (match[4]) {
-        var keyValues = match[4].split('&');
-        for (var i = 0, iLen = keyValues.length; i < iLen; i++) {
-          let keyValue = keyValues[i].split('=');
-          data.set(decodeURIComponent(keyValue[0]), decodeURIComponent(keyValue[1]));
-        }
-      }
-      return {
-        name: match[1],
-        elementTag: match[2],
-        import: match[3] && match[3].substr(1, match[3].length - 2),
-        data: data
-      };
-    }
-    return null;
   }
 
   //TODO Unit test
@@ -327,6 +270,9 @@ class RouterElement extends HTMLElement {
   disconnectedCallback(){
     RouterElement.removeRouter.call(this._parentRouter, this);
     this.removeEventListener('routerAdded', this.addRouter, false);
+    if (this.getName()) {
+      NamedRouting.removeNamedItem(this.getName());
+    }
   }
 
   connectedCallback(){
@@ -360,9 +306,9 @@ class RouterElement extends HTMLElement {
         { bubbles: true, cancelable: true, composed: true, detail: { router: this }});
       this.dispatchEvent(routerAddedEvent);
       this._parentRouter = routerAddedEvent.detail.parentRouter;
-      // Comment this out because the remainder might be a collection of routers
-      // this._currentMatch = this._parentRouter._currentMatch && { remainder: this._parentRouter._currentMatch.remainder };
       this.addEventListener('onRouterAdded', (this.handlerAddRouter = RouterElement.handlerAddRouter.bind(this)), false);
+
+      NamedRouting.addNamedItem(this);
     }
   }
 
@@ -391,6 +337,13 @@ class RouterElement extends HTMLElement {
 
       RouterElement.changeUrl(decodeURIComponent(location.pathname));
     }
+  }
+
+  getName() {
+    if (this.routerName === undefined) {
+      this.routerName = this.getAttribute('name')
+    }
+    return this.routerName;
   }
 
   getCurrentMatch() {
@@ -439,6 +392,11 @@ class RouterElement extends HTMLElement {
   //   }
   // }
 
+  /**Takes in a url that contains named router data and renders the router using the information */
+  processNamedUrl(url) {
+    return this.performMatchOnRouter(url);
+  }
+
   /**
    * Performs route matching by iterating through routes looking for matches
    * @param {String} url  
@@ -460,8 +418,10 @@ class RouterElement extends HTMLElement {
     }
 
     if (match === null) {
-      outletElement.renderContent("No matching route for url " + url + " \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");
-      console && console.error &&  console.error("404 - Route not found for url " + url);
+      if (outletElement.renderContent) {
+        outletElement.renderContent("No matching route for url " + url + " \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");
+        console && console.error &&  console.error("404 - Route not found for url " + url);
+      }
       return null;
     }
     
@@ -469,6 +429,11 @@ class RouterElement extends HTMLElement {
   }
 
   performMatchOnRoute(url, routeElement) {
+    // RouteElement not connected yet
+    if (!routeElement.match) {
+      return null;
+    }
+
     let match = routeElement.match(url) || null;
     if (match != null) {
       if (match.redirect) {
@@ -721,5 +686,7 @@ class RouterElement extends HTMLElement {
     return (partiallyEncodedPath + partiallyEncodedQuery + partiallyEncodedHash);
   }
 }
+
+RouterElement.assignedOutlets = {};
 
 window.customElements.define('a-router', RouterElement);

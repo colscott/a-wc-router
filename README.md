@@ -1,5 +1,8 @@
-# A-router web-component
+# web-component-routerS
 ## Basic Routing
+
+## Named Outlets
+## Named Routers
 ## Base URL
 ## Nested Routing and Code Splitting
 Since &lt;a-router&gt;s can be declared anywhere, they can also exist in child content that is lazy loaded from imported script. This makes the routing dynamic and avoids an all knowing monolithic application routing declaration. Instead each router knows about it's own routes and that's it. Other routes can exist and still work as normal (grandchild routing, auxiliary routing, etc.).
@@ -78,4 +81,4 @@ Place holder content outlet for the &lt;a-router&gt; it is in.
 To run tests, install polymer cli.
     polymer serve
 And navigate to:
-    /components/routing-web-component/test/unit/index.html
+    /components/a-wc-router/test/unit/index.html

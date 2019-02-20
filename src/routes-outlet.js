@@ -8,95 +8,49 @@ class OutletElement extends HTMLElement {
         // p.textContent = 'Please add your routes!';
         // this.appendChild(p);
 
-        if (this.hasAttribute('name')) {
-          OutletElement.namedOutletRegistry = OutletElement.namedOutletRegistry || {};
-          this.outletName = this.getAttribute('name');
-          
-          if (OutletElement.namedOutletRegistry[this.outletName]) {
-            throw 'Found existing route named ' + this.outletName + ' when trying to add outlet of same name';
-          }
-
-          OutletElement.namedOutletRegistry[this.outletName] = this;
-
-          if (OutletElement.assignedOutlets[this.outletName]) {
-            let assignedOutlet = OutletElement.assignedOutlets[this.outletName];
-            OutletElement.setOutlet(this.outletName, assignedOutlet.elementTag, assignedOutlet.data, assignedOutlet.options);
-          }
-        }
+        NamedRouting.addNamedItem(this);
       }
     }
   }
 
   disconnectedCallback() {
-    if (OutletElement.namedOutletRegistry[this.outletName]) {
-      delete OutletElement.namedOutletRegistry[this.outletName];
+    if (this.getName()) {
+      NamedRouting.removeNamedItem(this.getName());
     }
   }
 
-  /**
-   * Assigns a custom element to a named OutletElement
-   * @param {string} outletName - Name of the outlet to render the custom element in
-   * @param {string} elementTag - Tag name of the custom element to render
-   * @param {object} data - Data to pass to the custom element. Data entries are set to attributes unless the first character of the name portion starts with a period '.'. In this case it is regarded as a property.
-   * @param {object} options - 
-   * @property {string} options.import - A module to load that contains the custom element definition. Only used if the custom element has not bee registered already.
-   */
-  static async setOutlet(outletName, elementTag, data, options, supressUrlGeneration) {
-    options = options || {};
-    if (data instanceof Map == false) {
-      data = new Map(Object.entries(data || {}));
+  static deserializeDataFromUrl(urlData) {
+    let match = urlData.match(/^([\w-]+)(\(.*?\))?(?:\:(.+))?/);
+    if (match) {
+      var data = new Map();
+      
+      if (match[3]) {
+        var keyValues = match[3].split('&');
+        for (var i = 0, iLen = keyValues.length; i < iLen; i++) {
+          let keyValue = keyValues[i].split('=');
+          data.set(decodeURIComponent(keyValue[0]), decodeURIComponent(keyValue[1]));
+        }
+      }
+      let elementTag = match[1];
+      let importPath = match[2] && match[2].substr(1, match[2].length - 2);
+      let options = { import: importPath };
+      return {
+        elementTag,
+        data,
+        options
+      };
     }
-
-    let assignedOutlet = OutletElement.assignedOutlets[outletName] = {
-      outletName: outletName,
-      elementTag,
-      data,
-      options
-    };
-
-    // OutletElement.setOutlet(outletName, assignedOutlet.elementTag, assignedOutlet.data, assignedOutlet.options);
-
-    //TODO Trigger an update of the url
-
-    let namedOutlet = (OutletElement.namedOutletRegistry || {})[outletName];
-    if (!namedOutlet) {
-      // Outlet does not exist yet. Assignment will be made whenoutlet with name is available.
-      return false;
-    }
-
-    await RouteElement.importCustomElement(options.import, elementTag);
-
-    let element = document.createElement(elementTag);
-    RouteElement.setData(element, data || {});
-
-    namedOutlet.renderContent(element);
-
-    if (!supressUrlGeneration) {
-      RouterElement.updateHistory('');
-    }
-
-    return element;
-  }
-
-  static generateUrlFragment(assignedOutlet) {
-    let details = assignedOutlet;
-    let urlFrag = `(${details.outletName}:${details.elementTag}`;
-    
-    if (details.options.import) {
-      urlFrag += `(${details.options.import})`;
-    }
-
-    if (details.data) {
-      details.data.forEach((v,k) => {
-        urlFrag += `:${k}=${v}`;
-      });
-    }
-
-    return urlFrag + ')';
   }
 
   constructor() {
     super();
+  }
+
+  getName() {
+    if (this.outletName === undefined) {
+      this.outletName = this.getAttribute('name')
+    }
+    return this.outletName;
   }
 
   _createPathSegments(url) {
@@ -132,8 +86,30 @@ class OutletElement extends HTMLElement {
           composed: true,
           detail: { }}));
   }
-}
 
-OutletElement.assignedOutlets = {};
+  /**Takes in a url that contains named outlet data and renders the outlet using the information */
+  async processNamedUrl(url, supressUrlGeneration) {
+    let details = OutletElement.deserializeDataFromUrl(url);
+    let options = details.options || {};
+    let data = details.data || new Map();
+
+    if (data instanceof Map === false) {
+      data = new Map(Object.entries(data || {}));
+    }
+
+    await RouteElement.importCustomElement(options.import, details.elementTag);
+
+    let element = document.createElement(details.elementTag);
+    RouteElement.setData(element, data || {});
+
+    this.renderContent(element);
+
+    if (!supressUrlGeneration) {
+      RouterElement.updateHistory('');
+    }
+
+    return element;
+  }
+}
 
 window.customElements.define('a-outlet', OutletElement);

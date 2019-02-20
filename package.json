@@ -1,5 +1,5 @@
 {
-  "name": "routing-web-component",
+  "name": "a-wc-router",
   "version": "0.0.1",
   "description": "Web Component Router",
   "main": "./src/routes-router.js",
@@ -8,15 +8,13 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "axe-core": "^3.1.2",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "pwa-helpers": "^0.9.0",
-    "stacky": "^1.3.1",
-    "wct-mocha": "^1.0.0",
-    "web-component-tester": "^6.9.2"
+    "uglify-es": "^3.3.9"
   },
   "scripts": {
+    "dist": "uglifyjs src/routes-router.js src/routes-route.js src/routes-outlet.js -o dist/router.js -c -m"
   },
   "repository": {
     "type": "git",
@@ -31,7 +29,7 @@
   "author": "colin scott",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/colscott/routing-web-component/issues"
+    "url": "https://github.com/colscott/a-wc-router/issues"
   },
-  "homepage": "https://github.com/colscott/routing-web-component#readme"
+  "homepage": "https://github.com/colscott/a-wc-router#readme"
 }
