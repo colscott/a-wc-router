@@ -1,6 +1,6 @@
 {
   "name": "a-wc-router",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Web Component Router",
   "main": "./src/routes-router.js",
   "directories": {
