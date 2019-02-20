@@ -290,7 +290,7 @@ class RouterElement extends HTMLElement {
 
       this._routers = [];
 
-      this.initialize();
+      RouterElement.initialize();
     }
 
     if (this.isConnected) {
@@ -319,7 +319,7 @@ class RouterElement extends HTMLElement {
   /**
    * Global initialization
    */
-  initialize() {
+  static initialize() {
     if (!RouterElement._initialized) {
       RouterElement._initialized = true;
       RouterElement._activeRouters = [];
@@ -327,7 +327,7 @@ class RouterElement extends HTMLElement {
       RouterElement._routers = [];
       RouterElement._encodeSpaceAsPlusInQuery = false;
       RouterElement._dwellTime = 2000;
-      RouterElement.whiteListRegEx = this.getAttribute('base-white-list') || '';
+      //RouterElement.whiteListRegEx = this.getAttribute('base-white-list') || '';
 
       window.addEventListener("popstate", RouterElement.changeUrl, false);
       window.addEventListener('click', RouterElement.handleClicks, false);

@@ -10,6 +10,7 @@ class OutletElement extends HTMLElement {
 
         NamedRouting.addNamedItem(this);
       }
+      RouterElement.initialize();
     }
   }
 
