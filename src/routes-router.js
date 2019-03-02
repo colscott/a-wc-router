@@ -1,4 +1,5 @@
-class RouterElement extends HTMLElement {
+import { NamedRouting } from './named-routing.js'
+export class RouterElement extends HTMLElement {
   /** 
    * Event handler for handling when child router is added.
    * This function is called in the scope of RouterElement for the top level collection of routers and instacnes of RotuerElement for nested router collections.
@@ -52,15 +53,13 @@ class RouterElement extends HTMLElement {
       return false;
     }
 
-    if (oldRoute.path === window.decodeURIComponent(window.location.pathname) &&
-      oldRoute.query === window.location.search.substring(1) &&
-      oldRoute.hash === window.decodeURIComponent(window.location.hash.substring(1))) {
+    if (oldRoute.path === path && oldRoute.query === query && oldRoute.hash === hash) {
       // Nothing to do, the current URL is a representation of our properties.
       return false;
     }
 
-    var newUrl = RouterElement._getUrl(path, query, hash);
-    RouterElement.dispatch(newUrl, path, query, hash);
+    var newUrl = RouterElement._getUrl(window.location);
+    RouterElement.dispatch(newUrl);
   }
 
   /**
@@ -102,29 +101,20 @@ class RouterElement extends HTMLElement {
     }
 
     let url = new URL(href);
-    let hash = RouterElement._getHash();
-    let path = window.decodeURIComponent(url.pathname);
-    let query = url.search.substring(1);
-    var newUrl = RouterElement._getUrl(path, query, hash);
-    RouterElement.dispatch(newUrl, path, query, hash);
+    var newUrl = RouterElement._getUrl(url);
+    RouterElement.dispatch(newUrl);
   }
 
   /**
    * Common entry point that starts the routing process.
-   * @param {String} url 
-   * @param {String} path 
-   * @param {String} query 
-   * @param {String} hash 
+   * @param {String} url
    * @fires RouterElement#onRouteCancelled
    */
-  static dispatch(url, path, query, hash) {
+  static dispatch(url) {
     let basePath = RouterElement.baseUrlSansHost();
     let shortUrl = url.substr(basePath.length);
     RouterElement._route = {
-      url: shortUrl,
-      path: path,
-      query: query,
-      hash: hash
+      url: shortUrl
     }
 
     // Check if all current routes wil let us navigate away
@@ -148,14 +138,14 @@ class RouterElement extends HTMLElement {
 
     RouterElement._activeRouters = [];
 
-    RouterElement.performMatchOnRouters(shortUrl, path, query, hash, RouterElement._routers);
+    RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers);
     RouterElement.updateHistory(url);
   }
 
   /** Updates the location history with the new href */
   static updateHistory(href) {
-    // TODO Generate the URL rather than using the url passed in as it might be missing named routers
-    let url = RouterElement.getUrlState();
+    let urlState = RouterElement.getUrlState();
+    let url = urlState;
 
     if (url.length === 2) {
       url = href;
@@ -175,6 +165,78 @@ class RouterElement extends HTMLElement {
     } else {
       window.history.pushState({}, '', fullNewUrl);
     }
+
+    RouterElement.updateAnchorsStatus(urlState);
+  }
+
+  /** Sets the active status of any registered links based on the current URL */
+  static updateAnchorsStatus(url) {
+    url = url || RouterElement.getUrlState();
+    let currentAnchors = RouterElement._anchors;
+    let nextAnchors = [];
+
+    // Tidy up any unconnected anchors
+    for (let i = 0, iLen = currentAnchors.length; i < iLen; i++) {
+      if (currentAnchors[i].a.isConnected === true) {
+        let link = currentAnchors[i];
+        nextAnchors[nextAnchors.length] = link;
+        link.a.classList.remove(link.a.activeClassName || 'active');
+      }
+    }
+
+    let urlFragments = url.split('::');
+    nextUrlFragment:
+    for (let j = 0, jLen = urlFragments.length; j < jLen; j++) {
+      let urlFragment = urlFragments[j];
+      let urlFragNamedItemMatch = NamedRouting.parseNamedItem(urlFragment, true);
+      nextLink:
+      for (let i = 0, iLen = nextAnchors.length; i < iLen; i++) {
+        let link = nextAnchors[i];
+        if (link && link.a.classList.contains(link.a.activeClassName || 'active')) {
+          continue nextLink;
+        }
+        if (link) {
+          if (link.routerMatches) {
+            let named = link.routerMatches.named;
+            let routes = link.routerMatches.routes;
+            if (urlFragNamedItemMatch) {
+              for (let k = 0, kLen = named.length; k < kLen; k++) {
+                if (named[k].name == urlFragNamedItemMatch.name) {
+                  // TODO strip import out of both before compare
+                  if (named[k].url == urlFragNamedItemMatch.urlEscaped) {
+                    // full match on named item
+                    link.a.classList.add(link.a.activeClassName || 'active');
+                    link = null;
+                    continue nextLink;
+                  } else 
+                  //Check if it's a mtch upto data portion of url
+                  if (urlFragNamedItemMatch.urlEscaped.indexOf(named[k].url) === 0) {
+                    // full match on named item
+                    link.a.classList.add(link.a.activeClassName || 'active');
+                    link = null;
+                    continue nextLink;
+                  }
+                }
+              }
+            }
+            for (let k = 0, kLen = routes.length; k < kLen; k++) {
+              if (urlFragment == routes[k]) {
+                // full match on route
+                link.a.classList.add(link.a.activeClassName || 'active');
+                link = null;
+                continue nextLink;
+              } else if (routes[k].indexOf(urlFragment) === 0) {
+                // partial match on route
+                link.a.classList.add(link.a.activeClassName || 'active');
+                link = null;
+                continue nextLink;
+              }
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 
   /** Gets the current URL state based on currently active routers and outlets. */
@@ -198,12 +260,9 @@ class RouterElement extends HTMLElement {
   /**
    * Iterates over each child RouterElement and calls it to match it portion of the current URL.
    * @param {string} url - While URL. Will be parsed for individual router URLs.
-   * @param {string} path 
-   * @param {string} query 
-   * @param {string} hash 
    * @param {RouterElement[]} routers
    */
-  static performMatchOnRouters(url, path, query, hash, routers) {
+  static performMatchOnRouters(url, routers) {
     // TODO query string data should be placed on RouterElement so it's accessible across all outlets. It's regarded as shared data across the routers.
     // TODO Maybe have a way to regiser for changes to query string so routes can react
     // TODO auxilary routers - start unit testing
@@ -263,8 +322,60 @@ class RouterElement extends HTMLElement {
     return urls;
   }
 
-  static urlForComponent() {
-    //TODO think about <a href="javascript(RouterElement.urlForComponent('my-component'))"> to help build urls.
+  static registerLinks(links, activeClassName) {
+    let currentAnchors = RouterElement._anchors;
+
+    let nextAnchors = [];
+
+    // Tidy up any unconnected anchors
+    for (let i = 0, iLen = currentAnchors.length; i < iLen; i++) {
+      if (currentAnchors[i].a.isConnected === true) {
+        nextAnchors[nextAnchors.length] = currentAnchors[i];
+      }
+    }
+
+    // Add the new anchors
+    for (let i = 0, iLen = links.length; i < iLen; i++) {
+      let matches = RouterElement.sanitizeLinkHref(links[i]);
+      if (matches) {
+        nextAnchors[nextAnchors.length] = {
+          a: links[i],
+          activeClassName: activeClassName,
+          routerMatches: matches
+        };
+      }
+    }
+
+    // Do this after pushing history location state
+    RouterElement._anchors = nextAnchors;
+
+    RouterElement.updateAnchorsStatus();
+  }
+
+  static sanitizeLinkHref(linkElement) {
+    let href = RouterElement._getSameOriginLinkHref(linkElement);
+    let url = new URL(href);
+    let hash = RouterElement._getHash();
+    let path = window.decodeURIComponent(url.pathname);
+    let query = url.search.substring(1);
+    let basePathLength = RouterElement.baseUrlSansHost().length;
+    url = path.substr(basePathLength);
+    if (url[0] === '(') {
+      url = url.substr(1,url.length - 2);
+    }
+    let urls = RouterElement.splitUrlIntoRouters(url);
+    let namedMatches = [];
+    let routerMatches = [];
+    for(let i = 0, iLen = urls.length; i < iLen; i++) {
+      let namedMatch = NamedRouting.parseNamedItem(urls[i], true);
+      if(namedMatch) {
+        namedMatches.push(namedMatch);
+      } else {
+        routerMatches.push(urls[i]);
+      }
+    }
+
+    return { named: namedMatches, routes: routerMatches };
   }
 
   disconnectedCallback(){
@@ -323,6 +434,7 @@ class RouterElement extends HTMLElement {
     if (!RouterElement._initialized) {
       RouterElement._initialized = true;
       RouterElement._activeRouters = [];
+      RouterElement._anchors = [];
       RouterElement._route = {};
       RouterElement._routers = [];
       RouterElement._encodeSpaceAsPlusInQuery = false;
@@ -447,7 +559,7 @@ class RouterElement extends HTMLElement {
       if (match.useCache) {
         // Content is already loaded so addRoute will not get called. Start the matching for children manually.
         if (this._routers && match.remainder) {
-          RouterElement.performMatchOnRouters(match.remainder, '', '', '', this._routers);
+          RouterElement.performMatchOnRouters(match.remainder, this._routers);
         }
       } else {
         let outletElement = this._getRouterElements('a-outlet')[0];
@@ -494,7 +606,7 @@ class RouterElement extends HTMLElement {
     let urlFrag = match.url;
     
     if (match.remainder) {
-      urlFrag += match.remainder;
+      urlFrag += '/' + match.remainder;
     }
 
     if (this._routers && this._routers.length) {
@@ -535,27 +647,32 @@ class RouterElement extends HTMLElement {
    * @return {string?} .
    */
   static _getSameOriginLinkHref(event) {
-    // We only care about left-clicks.
-    if (event.button !== 0) {
-      return null;
-    }
-
-    // We don't want modified clicks, where the intent is to open the page
-    // in a new tab.
-    if (event.metaKey || event.ctrlKey) {
-      return null;
-    }
-
-    var eventPath = event.path;
-    var anchor = null;
-
-    for (var i = 0; i < eventPath.length; i++) {
-      var element = eventPath[i];
-
-      if (element.tagName === 'A' && element.href) {
-        anchor = element;
-        break;
+    let anchor = null;
+    if (event instanceof Event) {
+      // We only care about left-clicks.
+      if (event.button !== 0) {
+        return null;
       }
+
+      // We don't want modified clicks, where the intent is to open the page
+      // in a new tab.
+      if (event.metaKey || event.ctrlKey) {
+        return null;
+      }
+
+      let eventPath = event.path;
+      
+
+      for (var i = 0; i < eventPath.length; i++) {
+        let element = eventPath[i];
+
+        if (element.tagName === 'A' && element.href) {
+          anchor = element;
+          break;
+        }
+      }
+    } else {
+      anchor = event;
     }
 
     // If there's no link there's nothing to do.
@@ -579,17 +696,17 @@ class RouterElement extends HTMLElement {
       return null;
     }
 
-    var href = anchor.href;
+    let href = anchor.href;
     // If link is different to base path, don't intercept.
     if (href.indexOf(document.baseURI) !== 0) {
       return null;
     }
 
-    var hrefEsacped = href.replace(/::/g, '$_$_');
+    let hrefEsacped = href.replace(/::/g, '$_$_');
 
     // It only makes sense for us to intercept same-origin navigations.
     // pushState/replaceState don't work with cross-origin links.
-    var url;
+    let url;
 
     if (document.baseURI != null) {
       url = new URL(hrefEsacped, document.baseURI);
@@ -597,7 +714,7 @@ class RouterElement extends HTMLElement {
       url = new URL(hrefEsacped);
     }
 
-    var origin;
+    let origin;
 
     // IE Polyfill
     if (window.location.origin) {
@@ -606,18 +723,18 @@ class RouterElement extends HTMLElement {
       origin = window.location.protocol + '//' + window.location.host;
     }
 
-    var urlOrigin;
+    let urlOrigin;
 
     if (url.origin && url.origin !== 'null') {
       urlOrigin = url.origin;
     } else {
       // IE always adds port number on HTTP and HTTPS on <a>.host but not on
       // window.location.host
-      var urlHost = url.host;
-      var urlPort = url.port;
-      var urlProtocol = url.protocol;
-      var isExtraneousHTTPS = urlProtocol === 'https:' && urlPort === '443';
-      var isExtraneousHTTP = urlProtocol === 'http:' && urlPort === '80';
+      let urlHost = url.host;
+      let urlPort = url.port;
+      let urlProtocol = url.protocol;
+      let isExtraneousHTTPS = urlProtocol === 'https:' && urlPort === '443';
+      let isExtraneousHTTP = urlProtocol === 'http:' && urlPort === '80';
 
       if (isExtraneousHTTPS || isExtraneousHTTP) {
         urlHost = url.hostname;
@@ -629,7 +746,7 @@ class RouterElement extends HTMLElement {
       return null;
     }
 
-    var normalizedHref = url.pathname.replace(/\$_\$_/g, '::') + url.search.replace(/\$_\$_/g, '::') + url.hash.replace(/\$_\$_/g, '::');
+    let normalizedHref = url.pathname.replace(/\$_\$_/g, '::') + url.search.replace(/\$_\$_/g, '::') + url.hash.replace(/\$_\$_/g, '::');
 
     // pathname should start with '/', but may not if `new URL` is not supported
     if (normalizedHref[0] !== '/') {
@@ -663,9 +780,12 @@ class RouterElement extends HTMLElement {
     return document.baseURI.substr(host.length+1);
   }
 
-  static _getUrl(path, query, hash) {
-    let partiallyEncodedPath =
-        window.encodeURI(path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
+  static _getUrl(url) {
+    url = url || window.location;
+    let path = window.decodeURIComponent(url.pathname);
+    let query = url.search.substring(1);
+    let hash = RouterElement._getHash(url);
+    let partiallyEncodedPath = window.encodeURI(path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
     let partiallyEncodedQuery = '';
     if (query) {
       partiallyEncodedQuery = '?' + query.replace(/\#/g, '%23');

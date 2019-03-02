@@ -1,4 +1,4 @@
-class RouteElement extends HTMLElement {
+export class RouteElement extends HTMLElement {
 
   connectedCallback(){
     if (!this.created) {

@@ -3,7 +3,7 @@
  * Simplifies nested routing by being able to target specific routers and outlets in a link. 
  * Can act as a message bus of sorts. Named items being the handlers and assignments as the messages.
  */
-class NamedRouting {
+export class NamedRouting {
   /**Adds a router or outlet to the registry */
   static addNamedItem(name, item) {
     if (item === undefined) {
@@ -90,7 +90,8 @@ class NamedRouting {
 
   /**Serializes an assignment for URL. */
   static generateUrlFragment(assignment) {
-    return `(${assignment.name}:${assignment.url})`;
+    // Polymer server does not like the period in the import statement
+    return `(${assignment.name}:${assignment.url.replace(/\./g, '_dot_')})`;
   }
 
   /**
@@ -98,7 +99,7 @@ class NamedRouting {
    * @param {string} url
    * @returns {object} null if not able to parse
    */
-  static parseNamedItem(url) {
+  static parseNamedItem(url, supressAdding) {
     if (url[0] === '/') {
       url = url.substr(1);
     }
@@ -109,10 +110,15 @@ class NamedRouting {
 
     let match = url.match(/^\/?\(?([\w_-]+)\:(.*)\)?/);
     if (match) {
-      NamedRouting.addAssignment(match[1], match[2]);
+      // Polymer server does not like the period in the import statement
+      let urlEscaped = match[2].replace(/_dot_/g, '.');
+      if (supressAdding !== true) {
+        NamedRouting.addAssignment(match[1], urlEscaped);
+      }
       return {
         name: match[1],
-        url: match[2]
+        url: match[2],
+        urlEscaped: urlEscaped
       };
     }
 

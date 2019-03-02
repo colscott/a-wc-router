@@ -1,3 +1,7 @@
+import { NamedRouting } from './named-routing.js'
+import { RouterElement } from './routes-router.js'
+import { RouteElement } from './routes-route.js'
+
 class OutletElement extends HTMLElement {
 
   connectedCallback() {
