@@ -171,10 +171,10 @@ class End2EndElement extends HTMLElement {
 
         describe('link state', function() {
         it('link should be active for routes', function(done){
-            let link1 = document.createElement('link');
+            let link1 = document.createElement('a');
             document.body.appendChild(link1);
             link1.href = 'nested/webcomponent_nested';
-            let link2 = document.createElement('link');
+            let link2 = document.createElement('a');
             document.body.appendChild(link2);
             link2.href = 'nested2/webcomponent_nested';
             RouterElement.registerLinks([link1, link2], 'active');
@@ -189,10 +189,10 @@ class End2EndElement extends HTMLElement {
         });
 
         it('link should be active for named outlet', function(done){
-            let link1 = document.createElement('link');
+            let link1 = document.createElement('a');
             document.body.appendChild(link1);
             link1.href = '(myoutlet1:test-dummy(./test-dummy.js))';
-            let link2 = document.createElement('link');
+            let link2 = document.createElement('a');
             document.body.appendChild(link2);
             link2.href = '(myoutlet:tests-dummy(./test-dummy.js))';
             RouterElement.registerLinks([link1, link2], 'active');
@@ -213,13 +213,13 @@ class End2EndElement extends HTMLElement {
         });
 
         it('link should be active for named outlet with data', function(done){
-            let link1 = document.createElement('link');
+            let link1 = document.createElement('a');
             document.body.appendChild(link1);
             link1.href = '(myoutlet1:test-dummy(./test-dummy.js):param1=value1)';
-            let link2 = document.createElement('link');
+            let link2 = document.createElement('a');
             document.body.appendChild(link2);
             link2.href = '(myoutlet1:test-dummy(./test-dummy.js)):param1=value2';
-            let link3 = document.createElement('link');
+            let link3 = document.createElement('a');
             document.body.appendChild(link3);
             link3.href = '(myoutlet1:test-dummy(./test-dummy.js))';
             RouterElement.registerLinks([link1, link2, link3], 'active');
@@ -241,10 +241,10 @@ class End2EndElement extends HTMLElement {
         });
 
         it('link should be active for named routes', function(done){
-            let link1 = document.createElement('link');
+            let link1 = document.createElement('a');
             document.body.appendChild(link1);
             link1.href = '(router-a-b:template2_nested)';
-            let link2 = document.createElement('link');
+            let link2 = document.createElement('a');
             document.body.appendChild(link2);
             link2.href = '(router-a-b:template_nested)';
             RouterElement.registerLinks([link1, link2], 'active');

@@ -9,8 +9,11 @@ The format of the links href is as follows:
     <a href="(myOutletName:my-web-component(./import/script.js):htmlAttr1=value1&htmlAttr2=value2)">
                 
 myOutletName ==> The name of the outlet to populate 
+
 my-web-component ==> The tage name of the Web Component to put in the outlet
+
 (./import/script.js) ==> Optional script to load that contains the Web Component
+
 htmlAttr1=value1&htmlAttr2=value2 ==> HTML attributes and values to set on the Web Component
 
 Example:

@@ -69,7 +69,7 @@ class OutletElement extends HTMLElement {
    */
   renderContent(content) {
     this.innerHTML = '';
-    console.log('outlet rendered: ' + this.id);
+    console.log('outlet rendered: ' + this.outletName, content);
 
     if (typeof content === 'string' || content instanceof String) {
       this.innerHTML = content;
@@ -100,6 +100,12 @@ class OutletElement extends HTMLElement {
 
     if (data instanceof Map === false) {
       data = new Map(Object.entries(data || {}));
+    }
+
+    // If same tag name then just set the data
+    if (this.children && this.children[0] && this.children[0].tagName.toLowerCase() == details.elementTag) {
+      RouteElement.setData(this.children[0], data || {});
+      return this.children[0];  
     }
 
     await RouteElement.importCustomElement(options.import, details.elementTag);

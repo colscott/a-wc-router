@@ -61,38 +61,50 @@ export class RouterElement extends HTMLElement {
     var newUrl = RouterElement._getUrl(window.location);
     RouterElement.dispatch(newUrl);
   }
-
+  
   /**
    * Global handler for page clicks. Filters out and handles clicks from links.
-   * @param {MouseEvent} event - the mouse click event
+   * @param {(MouseEvent|HTMLAnchorElement|string)} navigationSource - The source of the new url to navigate to. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
    */
-  static handleClicks(event) {
-    // If already handled and canceled
-    if (event.defaultPrevented) {
-      return;
+  static navigate(navigationSource) {
+    let event = null;
+    let anchor = null;
+
+    if (navigationSource instanceof Event) {
+      event = navigationSource;
+
+      // If already handled and canceled
+      if (event.defaultPrevented) {
+        return;
+      }
+    } else if (typeof navigationSource !== 'string') {
+      anchor = navigationSource;
     }
     
-    var href = RouterElement._getSameOriginLinkHref(event);
+    var href = RouterElement._getSameOriginLinkHref(navigationSource);
 
     if (!href) {
-      /**
-       * Event that fires if a link is not handled due to it not being same origin or base url.
-       * @event RouterElement#onRouteCancelled
-       * @type CustomEvent
-       * @property {Object} details - The event details
-       * @property {RouteElement} details.url - The url that was trying to be matched.
-       */
-      event.target.dispatchEvent(
-        new CustomEvent(
-          'onRouteNotHandled',
-          {
-            bubbles: true,
-            composed: true,
-            detail: { href }}));
+      let target = ((event && event.target) || anchor);
+      if (target) {
+        /**
+         * Event that fires if a link is not handled due to it not being same origin or base url.
+         * @event RouterElement#onRouteCancelled
+         * @type CustomEvent
+         * @property {Object} details - The event details
+         * @property {RouteElement} details.url - The url that was trying to be matched.
+         */
+        target.dispatchEvent(
+          new CustomEvent(
+            'onRouteNotHandled',
+            {
+              bubbles: true,
+              composed: true,
+              detail: { href }}));
+      }
       return;
     }
 
-    event.preventDefault();
+    event && event.preventDefault();
 
     // If the navigation is to the current page we shouldn't add a history
     // entry or fire a change event.
@@ -287,7 +299,6 @@ export class RouterElement extends HTMLElement {
     }
   }
 
-  //TODO Unit test
   static splitUrlIntoRouters(url) {
     var urls = [];
     var skip = 0;
@@ -336,13 +347,15 @@ export class RouterElement extends HTMLElement {
 
     // Add the new anchors
     for (let i = 0, iLen = links.length; i < iLen; i++) {
-      let matches = RouterElement.sanitizeLinkHref(links[i]);
-      if (matches) {
-        nextAnchors[nextAnchors.length] = {
-          a: links[i],
-          activeClassName: activeClassName,
-          routerMatches: matches
-        };
+      if (links[i].href) {
+        let matches = RouterElement.sanitizeLinkHref(links[i]);
+        if (matches) {
+          nextAnchors[nextAnchors.length] = {
+            a: links[i],
+            activeClassName: activeClassName,
+            routerMatches: matches
+          };
+        }
       }
     }
 
@@ -442,7 +455,7 @@ export class RouterElement extends HTMLElement {
       //RouterElement.whiteListRegEx = this.getAttribute('base-white-list') || '';
 
       window.addEventListener("popstate", RouterElement.changeUrl, false);
-      window.addEventListener('click', RouterElement.handleClicks, false);
+      window.addEventListener('click', RouterElement.navigate, false);
 
       // Listen for top level routers being added
       window.addEventListener('onRouterAdded', RouterElement.handlerAddRouter.bind(RouterElement), false);
@@ -639,16 +652,15 @@ export class RouterElement extends HTMLElement {
   }
 
   /**
-   * Returns the absolute URL of the link (if any) that this click event
-   * is clicking on, if we can and should override the resulting full
-   * page navigation. Returns null otherwise.
-   *
-   * @param {MouseEvent} event .
-   * @return {string?} .
+   * Returns the absolute URL of the link (if any) that this click event is clicking on, if we can and should override the resulting full page navigation. Returns null otherwise.
+   * @param {(MouseEvent|HTMLAnchorElement|string)} hrefSource - The source of the new url to handle. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
+   * @return {string?} Returns the absolute URL of the link (if any) that this click event is clicking on, if we can and should override the resulting full page navigation. Returns null otherwise.
    */
-  static _getSameOriginLinkHref(event) {
+  static _getSameOriginLinkHref(hrefSource) {
+    let href = null;
     let anchor = null;
-    if (event instanceof Event) {
+    if (hrefSource instanceof Event) {
+      let event = hrefSource;
       // We only care about left-clicks.
       if (event.button !== 0) {
         return null;
@@ -671,32 +683,37 @@ export class RouterElement extends HTMLElement {
           break;
         }
       }
+    } else if (typeof hrefSource === 'string') {
+      href = hrefSource;
     } else {
-      anchor = event;
+      anchor = hrefSource;
     }
 
-    // If there's no link there's nothing to do.
-    if (!anchor) {
-      return null;
+    if (anchor) {
+      // If there's no link there's nothing to do.
+      if (!anchor) {
+        return null;
+      }
+
+      // Target blank is a new tab, don't intercept.
+      if (anchor.target === '_blank') {
+        return null;
+      }
+
+      // If the link is for an existing parent frame, don't intercept.
+      if ((anchor.target === '_top' || anchor.target === '_parent') &&
+          window.top !== window) {
+        return null;
+      }
+
+      // If the link is a download, don't intercept.
+      if (anchor.download) {
+        return null;
+      }
+
+      href = anchor.href;
     }
 
-    // Target blank is a new tab, don't intercept.
-    if (anchor.target === '_blank') {
-      return null;
-    }
-
-    // If the link is for an existing parent frame, don't intercept.
-    if ((anchor.target === '_top' || anchor.target === '_parent') &&
-        window.top !== window) {
-      return null;
-    }
-
-    // If the link is a download, don't intercept.
-    if (anchor.download) {
-      return null;
-    }
-
-    let href = anchor.href;
     // If link is different to base path, don't intercept.
     if (href.indexOf(document.baseURI) !== 0) {
       return null;
