@@ -31,9 +31,6 @@ Then enter this url in the browser:
     // This example also passes a HTTML attribute 'accountNumber' to the wc-account-details Web Component
     <a class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
 
-
-
-
 ## Named Outlets
 You can also target outlets without using routing at all. This is an extreamly simple way to create a scalable routing application.
 
@@ -86,8 +83,27 @@ Named outlet example:
     // Register the link somewhere (could be after you generate the link itself)
     RouterElement.registerLinks(this.querySelectorAll('a'));
 
+    // Or register the links via an event for a more decoupled approach
+    window.dispatchEvent(
+        new CustomEvent(
+            'routerLinksAdded', {
+                detail: {
+                    links: this.querySelectorAll('a') }}));
+
 Normal routes and named routes are handled the same way.
 
+## Navigating
+As well as using links to navigate, you can also navigate using code:
+
+    RouterElement.navigate('myUrl');
+    RouterElement.navigate('/(account-details:wc-account-details/accountNumber=${account.number})');
+
+    // Or via an event for a more decoupled approach
+    window.dispatchEvent(
+        new CustomEvent(
+            'navigate', {
+                detail: {
+                    href: '/(account-details:wc-account-details/accountNumber=${account.number})' }}));
 ## Base URL
 Routing only takes place if a url also matches the document.baseURI.
 The document.baseURI is commonly used in Single Page Application frameworks to distiguish between a url that is meant for the client app and a url that is meant to be sent to the server, like a REST API call.
