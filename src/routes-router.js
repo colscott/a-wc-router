@@ -12,6 +12,18 @@ export class RouterElement extends HTMLElement {
     event.detail.parentRouter = this;
   }
 
+  static handlerRouterLinksAdded(event) {
+    if (event.detail.links) {
+      RouterElement.registerLinks(event.detail.links);
+    }
+  }
+
+  static handlerNavigate(event) {
+    if (event.detail.href) {
+      RouterElement.navigate(event.detail.href);
+    }
+  }
+
   /** 
    * Used to link up RouterElements with child RouterElements even through Shadow DOM.
    * @param {RouterElement} - routerElement to add. RouterElement after the first can be thought of as auxilary RouterElements
@@ -463,6 +475,12 @@ export class RouterElement extends HTMLElement {
 
       // Listen for top level routers being added
       window.addEventListener('onRouterAdded', RouterElement.handlerAddRouter.bind(RouterElement), false);
+
+      // Listen for link registration
+      window.addEventListener('routerLinksAdded', RouterElement.handlerRouterLinksAdded.bind(RouterElement), false);
+
+      // Listen for navigate requests
+      window.addEventListener('navigate', RouterElement.handlerNavigate.bind(RouterElement), false);
 
       RouterElement.changeUrl(decodeURIComponent(location.pathname));
     }

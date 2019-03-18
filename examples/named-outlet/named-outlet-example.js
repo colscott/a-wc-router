@@ -13,7 +13,11 @@ class NamedOutletExampleElement extends HTMLElement {
             
             // Register links so they can have active state for styling
             // RouterElement.registerLinks(this.querySelectorAll('.ui.menu a'));
-            
+            window.dispatchEvent(
+                new CustomEvent(
+                    'routerLinksAdded', {
+                        detail: {
+                            links: this.querySelectorAll('.ui.menu a') }}));
         }
     }
     
