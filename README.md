@@ -11,6 +11,16 @@
 - Automatically styling active links
 - Zero dependenies
 
+## Examples
+Examples can be found in the examples folder.
+To run the examples locally run:
+
+    node exampleServer.js
+
+Then enter this url in the browser:
+
+    http://localhost:3000/app/examples/named-outlet/
+
 ## Basic Routing
 ### Named Outlet example
 
