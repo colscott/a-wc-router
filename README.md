@@ -1,5 +1,28 @@
-# web-component-router
+# Routing Web Component
+## Features
+- Web Component
+- Code spltting/lazy loading
+- Declarative routing
+- Nested routing
+- Named/auxiliary routing and outlets
+- Path params
+- Guards
+- Works with regular anchor tags for links
+- Automatically styling active links
+- Zero dependenies
+
 ## Basic Routing
+### Named Outlet example
+
+    // Defined the outlet somewhere
+    <an-outlet name="account-details">Please select an account</an-outlet>
+
+    // Define the link anywhere in the application
+    // This example also passes a HTTML attribute 'accountNumber' to the wc-account-details Web Component
+    <a class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
+
+
+
 
 ## Named Outlets
 You can also target outlets without using routing at all. This is an extreamly simple way to create a scalable routing application.
@@ -19,7 +42,7 @@ htmlAttr1=value1&htmlAttr2=value2 ==> HTML attributes and values to set on the W
 Example:
 
     // Defined the outlet somewhere
-    <a-outlet name="account-details">Please select an account</a-outlet>
+    <an-outlet name="account-details">Please select an account</an-outlet>
 
     // Define the link anywhere in the application
     // This example also passes a HTTML attribute 'accountNumber' to the wc-account-details Web Component
@@ -45,7 +68,7 @@ To give a link the ability to be marked active, you must register it first. Link
 Named outlet example:
 
     // Defined the outlet somewhere
-    <a-outlet name="account-details">Please select an account</a-outlet>
+    <an-outlet name="account-details">Please select an account</an-outlet>
 
     // Define the link anywhere in the application
     <a class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
@@ -69,7 +92,7 @@ For example:
 
     // Main router
     <a-router>
-        <a-outlet></a-outlet>
+        <an-outlet></an-outlet>
         <a-route path="/user" import="./userBundle.js" element="user-main"></a-route>
         <a-route path="/item" import="./itemsBundle.js" element="item-main"></a-route>
         <a-route path="*"><template></template></a-route>
@@ -80,7 +103,7 @@ For example:
         if (this.connected && !this.innerHTML) {
             this.innerHTML = `
                 <a-router>
-                    <a-outlet></a-outlet>
+                    <an-outlet></an-outlet>
                     <a-route path="/userDetails" element="user-detials"></a-route>
                     <a-route path="/userEdit" element="user-edit"></a-route>
                 </a-route>
@@ -156,7 +179,7 @@ A route entry in the router. performs matching logic.
 | | data | Map of data found in the section of url that was matched. |
 | onRouteLeave| newRoute | Fired before matching occurs. Every active route fires the event. If any events are prevented from defualt action then the routing is preventde. It's a chance to prevent the router from leaving the current route. For example: data maybe lost if the user leaves the current route. Stop routing by event.preventDefualt(); |
 
-### &lt;a-outlet&gt;
+### &lt;an-outlet&gt;
 Place holder content outlet for the &lt;a-router&gt; it is in.
 
 ## Testing
