@@ -83,6 +83,10 @@ export class RouterElement extends HTMLElement {
     
     var href = RouterElement._getSameOriginLinkHref(navigationSource);
 
+    if (href === null) {
+      return;
+    }
+
     if (!href) {
       let target = ((event && event.target) || anchor);
       if (target) {
@@ -530,7 +534,7 @@ export class RouterElement extends HTMLElement {
     this.hasMatch = false;
     this._currentMatch = { remainder: url };
     let routeElements = this._getRouterElements('a-route');
-    let outletElement = this._getRouterElements('a-outlet')[0];
+    let outletElement = this._getRouterElements('an-outlet')[0];
     let match = null;
 
     for(let i = 0, iLen = routeElements.length; i < iLen; i++) {
@@ -575,7 +579,7 @@ export class RouterElement extends HTMLElement {
           RouterElement.performMatchOnRouters(match.remainder, this._routers);
         }
       } else {
-        let outletElement = this._getRouterElements('a-outlet')[0];
+        let outletElement = this._getRouterElements('an-outlet')[0];
         routeElement.getContent(match.data)
           .then((content) => outletElement.renderContent(content));
       }
@@ -654,7 +658,7 @@ export class RouterElement extends HTMLElement {
   /**
    * Returns the absolute URL of the link (if any) that this click event is clicking on, if we can and should override the resulting full page navigation. Returns null otherwise.
    * @param {(MouseEvent|HTMLAnchorElement|string)} hrefSource - The source of the new url to handle. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
-   * @return {string?} Returns the absolute URL of the link (if any) that this click event is clicking on, if we can and should override the resulting full page navigation. Returns null otherwise.
+   * @return {string?} Returns the absolute URL of the link (if any) that this click event is clicking on, if we can and should override the resulting full page navigation. Returns null if click should not be consumed.
    */
   static _getSameOriginLinkHref(hrefSource) {
     let href = null;
@@ -673,8 +677,6 @@ export class RouterElement extends HTMLElement {
       }
 
       let eventPath = event.path;
-      
-
       for (var i = 0; i < eventPath.length; i++) {
         let element = eventPath[i];
 
@@ -683,6 +685,11 @@ export class RouterElement extends HTMLElement {
           break;
         }
       }
+
+      // If there's no link there's nothing to do.
+      if (!anchor) {
+        return null;
+      }
     } else if (typeof hrefSource === 'string') {
       href = hrefSource;
     } else {
@@ -690,25 +697,20 @@ export class RouterElement extends HTMLElement {
     }
 
     if (anchor) {
-      // If there's no link there's nothing to do.
-      if (!anchor) {
-        return null;
-      }
-
       // Target blank is a new tab, don't intercept.
       if (anchor.target === '_blank') {
-        return null;
+        return '';
       }
 
       // If the link is for an existing parent frame, don't intercept.
       if ((anchor.target === '_top' || anchor.target === '_parent') &&
           window.top !== window) {
-        return null;
+        return '';
       }
 
       // If the link is a download, don't intercept.
       if (anchor.download) {
-        return null;
+        return '';
       }
 
       href = anchor.href;
@@ -716,7 +718,7 @@ export class RouterElement extends HTMLElement {
 
     // If link is different to base path, don't intercept.
     if (href.indexOf(document.baseURI) !== 0) {
-      return null;
+      return '';
     }
 
     let hrefEsacped = href.replace(/::/g, '$_$_');
@@ -760,7 +762,7 @@ export class RouterElement extends HTMLElement {
     }
 
     if (urlOrigin !== origin) {
-      return null;
+      return '';
     }
 
     let normalizedHref = url.pathname.replace(/\$_\$_/g, '::') + url.search.replace(/\$_\$_/g, '::') + url.hash.replace(/\$_\$_/g, '::');
@@ -773,7 +775,7 @@ export class RouterElement extends HTMLElement {
     // If we've been configured not to handle this url... don't handle it!
     let urlSpaceRegExp = RouterElement._makeRegExp(RouterElement.whiteListRegEx);
     if (urlSpaceRegExp && !urlSpaceRegExp.test(normalizedHref)) {
-      return null;
+      return '';
     }
 
     // Need to use a full URL in case the containing page has a base URI.

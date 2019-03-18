@@ -69,7 +69,7 @@ class OutletElement extends HTMLElement {
    */
   renderContent(content) {
     this.innerHTML = '';
-    console.log('outlet rendered: ' + this.outletName, content);
+    // console.log('outlet rendered: ' + this.outletName, content);
 
     if (typeof content === 'string' || content instanceof String) {
       this.innerHTML = content;
@@ -123,4 +123,4 @@ class OutletElement extends HTMLElement {
   }
 }
 
-window.customElements.define('a-outlet', OutletElement);
+window.customElements.define('an-outlet', OutletElement);
