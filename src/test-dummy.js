@@ -1,19 +1,30 @@
 
 class TestDummyElement extends HTMLElement {
 
-  connectedCallback(){
-    if (!this.created) {
-      this.created = true;
-      var p = document.createElement('p');
-      var content = 'Test Element';
-      
-      if (this.hasAttribute('requiredParam')) {
-        content += ' ' + this.getAttribute('requiredParam');
-      }
+  render() {
+    this.innerHTML = `<p>Test Element${this.getRequiredParam()}</p>`;
+  }
 
-      p.textContent = content;
-      this.appendChild(p);
+  getRequiredParam() {
+    if (this.hasAttribute('requiredParam')) {
+      return ' ' + this.getAttribute('requiredParam');
     }
+
+    return '';
+  }
+
+  static get observedAttributes() { return ['requiredparam']; }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name == 'requiredparam') {
+      this.render();
+    }
+  }
+
+  // TODO test fails because same element instance is reused but the attributes are not ebing rendered after beind dynamically changed.
+
+  connectedCallback() {
+    this.render();
   }
 
   constructor() {

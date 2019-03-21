@@ -180,11 +180,11 @@ class End2EndElement extends HTMLElement {
             RouterElement.registerLinks([link1, link2], 'active');
             link1.click();
             clickAndTest({ href: "nested/webcomponent_nested" }, 'Test Element', () => {
-            expect(link1.className).to.equal('active');
-            expect(link2.className).to.equal('');
-            link1.remove();
-            link2.remove();
-            done();
+                expect(link1.className).to.equal('active');
+                expect(link2.className).to.equal('');
+                link1.remove();
+                link2.remove();
+                done();
             }, 'outletB');
         });
 
@@ -198,16 +198,15 @@ class End2EndElement extends HTMLElement {
             RouterElement.registerLinks([link1, link2], 'active');
 
             let outletUpdateCallback = function (event) {
-                document.body.removeEventListener("onOutletUpdated", outletUpdateCallback);
-                // TODO NamedRouting is not defined here.....!!!!!
-                NamedRouting.removeAssignment('myoutlet1');
+                window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+                setTimeout(() => NamedRouting.removeAssignment('myoutlet1'), 0);
                 expect(link1.className).to.equal('active');
                 expect(link2.className).to.equal('');
                 link1.remove();
                 link2.remove();
                 done();
             };
-            document.body.addEventListener("onOutletUpdated", outletUpdateCallback);
+            window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
 
             click({ href: "(myoutlet1:test-dummy(./test-dummy.js))" });
         });
@@ -225,8 +224,8 @@ class End2EndElement extends HTMLElement {
             RouterElement.registerLinks([link1, link2, link3], 'active');
 
             let outletUpdateCallback = function (event) {
-                document.body.removeEventListener("onOutletUpdated", outletUpdateCallback);
-                NamedRouting.removeAssignment('myoutlet1');
+                window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+                setTimeout(() => NamedRouting.removeAssignment('myoutlet1'), 0);
                 expect(link1.className).to.equal('active');
                 expect(link2.className).to.equal('');
                 expect(link3.className).to.equal('active');
@@ -235,7 +234,7 @@ class End2EndElement extends HTMLElement {
                 link3.remove();
                 done();
             };
-            document.body.addEventListener("onOutletUpdated", outletUpdateCallback);
+            window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
 
             click({ href: "(myoutlet1:test-dummy(./test-dummy.js):param1=value1)" });
         });
@@ -250,7 +249,7 @@ class End2EndElement extends HTMLElement {
             RouterElement.registerLinks([link1, link2], 'active');
             click({ href: "nested/webcomponent_nested" });
             clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', () => {
-            NamedRouting.removeAssignment('router-a-b');
+            setTimeout(() => NamedRouting.removeAssignment('router-a-b'), 0);
             expect(link1.className).to.equal('');
             expect(link2.className).to.equal('active');
             link1.remove();
@@ -281,7 +280,7 @@ class End2EndElement extends HTMLElement {
         it('updates for clicked links', function(done) {
             click({ href: "nested/webcomponent_nested" });
             clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', () => {
-            NamedRouting.removeAssignment('router-a-b');
+            setTimeout(() => NamedRouting.removeAssignment('router-a-b'), 0);
             done();
             }, 'outletB');
         });
