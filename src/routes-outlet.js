@@ -76,20 +76,8 @@ class OutletElement extends HTMLElement {
     } else {
       this.appendChild(content);
     }
-    
-    /**
-     * Outlet updated event that fires after an Outlet replaces it's content.
-     * @event OutletElement#onOutletUpdated
-     * @type CustomEvent
-     * @property {any} - Currently no information is passed in the event.
-     */
-    this.dispatchEvent(
-      new CustomEvent(
-        'onOutletUpdated',
-        {
-          bubbles: true,
-          composed: true,
-          detail: { }}));
+
+    this.dispatchOuletUpdated();
   }
 
   /**Takes in a url that contains named outlet data and renders the outlet using the information */
@@ -105,6 +93,7 @@ class OutletElement extends HTMLElement {
     // If same tag name then just set the data
     if (this.children && this.children[0] && this.children[0].tagName.toLowerCase() == details.elementTag) {
       RouteElement.setData(this.children[0], data || {});
+      this.dispatchOuletUpdated();
       return this.children[0];  
     }
 
@@ -120,6 +109,22 @@ class OutletElement extends HTMLElement {
     }
 
     return element;
+  }
+
+  dispatchOuletUpdated() {
+    /**
+     * Outlet updated event that fires after an Outlet replaces it's content.
+     * @event OutletElement#onOutletUpdated
+     * @type CustomEvent
+     * @property {any} - Currently no information is passed in the event.
+     */
+    this.dispatchEvent(
+      new CustomEvent(
+        'onOutletUpdated',
+        {
+          bubbles: true,
+          composed: true,
+          detail: { }}));
   }
 }
 
