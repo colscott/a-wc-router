@@ -264,6 +264,22 @@ export class RouterElement extends HTMLElement {
         }
       }
     }
+
+    /**
+     * Event that fires if a link is not handled due to it not being same origin or base url.
+     * @event RouterElement#onRouteCancelled
+     * @type CustomEvent
+     * @property {Object} details - The event details
+     * @property {RouteElement} details.url - The url that was trying to be matched.
+     */
+    window.dispatchEvent(
+      new CustomEvent(
+        'onLinkActiveStatusUpdated',
+        {
+          bubbles: true,
+          composed: true,
+          detail: { links: nextAnchors }}));
+          
     return null;
   }
 
