@@ -23,13 +23,30 @@ Then enter this url in the browser:
 
 ## Basic Routing
 ### Named Outlet example
+Routing can also be acheived without Routing and Routes. You can set content by targeting an outlet by name and injecting a custom element into it. You may have as many named outlets on the page as you like.
 
     // Defined the outlet somewhere
-    <an-outlet name="account-details">Please select an account</an-outlet>
+    <an-outlet name="main">Please click a link</an-outlet>
 
     // Define the link anywhere in the application
     // This example also passes a HTTML attribute 'accountNumber' to the wc-account-details Web Component
-    <a class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
+    // Format is (outlet-name:tag-name-to-inject(/optional/url/for/importing/script.js):param1=value1&param2=value2)
+    <a href="/(main:user-main)">click for user</a>
+    <a href="/(main:item-main)">click for item</a>
+
+### Routing example
+
+    // Main router showing same usage as the Name Outlet example above
+    <a-router>
+        <an-outlet></an-outlet>
+        <a-route path="/user" import="./userBundle.js" element="user-main"></a-route>
+        <a-route path="/item" import="./itemsBundle.js" element="item-main"></a-route>
+        <a-route path="/template"><template>Hello Template</template></a-route>
+        <a-route path="*"><template></template></a-route>
+    <a-router>
+
+    <a href='user'>click for user</a>
+    <a href='item'>click for item</a>
 
 ## Named Outlets
 You can also target outlets without using routing at all. This is an extreamly simple way to create a scalable routing application.
@@ -53,7 +70,7 @@ Example:
 
     // Define the link anywhere in the application
     // This example also passes a HTTML attribute 'accountNumber' to the wc-account-details Web Component
-    <a class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
+    <a class="item" href="/(account-details:wc-account-details:accountNumber=${account.number})">
 
 
 ## Named Routers
@@ -164,6 +181,7 @@ You then include the data in the link href:
 
 ## Route Guards
 The route tag emits a onRouteLeave event that preventDefault can be set to true to cancel the current route match.
+
 Another option is to listen to the onRouteMatch event and set preventDefault to true. This will prevent the current route match. However, the next route will be tesged for a match.
 
 ## Modifying Routes
