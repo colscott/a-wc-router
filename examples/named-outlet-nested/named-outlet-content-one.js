@@ -1,4 +1,4 @@
-export class ExampleContentOneElement extends HTMLElement {
+export class NestedOutletContentOneElement extends HTMLElement {
 
     connectedCallback() {
         if (!this._initialized) {
@@ -13,11 +13,11 @@ export class ExampleContentOneElement extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <p>Hello example ${this.getAttribute('title') || 'Events'}!</p>
+            <p>Hello example ${this.getAttribute('title') || 'Editorials'}!</p>
             <p>Param1 - ${this.getAttribute('param1') || 'not set'}<p>
             <p>Param2 - ${this.getAttribute('param2') || 'not set'}<p>
         `;
     }
 }
 
-customElements.define('example-content-one', ExampleContentOneElement);
+customElements.define('nested-outlet-content-one', NestedOutletContentOneElement);

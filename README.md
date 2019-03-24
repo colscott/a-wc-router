@@ -12,7 +12,8 @@
 - Zero dependenies
 
 ## Examples
-Examples can be found in the examples folder.
+Examples can be found in the examples folder and are hosted [here](https://colscott.github.io/routing-wc/examples/)
+
 To run the examples locally run:
 
     node exampleServer.js

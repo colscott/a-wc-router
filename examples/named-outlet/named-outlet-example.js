@@ -1,8 +1,13 @@
-// import '../../build/es6-bundled/src/router.js'
+// import { RouterElement } from '../../build/es6-bundled/src/router.js'
+// import '../../src/routes-link.js';
 import '../../src/routes-outlet.js';
 
-import './../shared/example-content-one.js';
-import './../shared/example-content-two.js';
+import './../shared/main-menu.js';
+import './../shared/code-example.js';
+
+import './content-basic.js';
+import './content-attr-params.js';
+import './content-prop-params.js';
 
 class NamedOutletExampleElement extends HTMLElement {
     
@@ -17,7 +22,7 @@ class NamedOutletExampleElement extends HTMLElement {
                 new CustomEvent(
                     'routerLinksAdded', {
                         detail: {
-                            links: this.querySelectorAll('.ui.menu a') }}));
+                            links: this.querySelectorAll('[code-example] a') }}));
         }
     }
     
@@ -27,15 +32,26 @@ class NamedOutletExampleElement extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <link rel="stylesheet" href="/examples/assets/styles/menu.min.css">
-            <link rel="stylesheet" href="/examples/assets/styles/segment.min.css">
+<common-styles></common-styles>
 
-            <div class="ui three item menu">
-                <a class="item" href="/app/examples/named-outlet/main:example-content-one">Editorials</a>
-                <a class="item" href="/app/examples/named-outlet/main:example-content-two:title=Reviews">Reviews</a>
-                <a class="item" href="/app/examples/named-outlet/main:example-content-three(/examples/shared/example-content-three.js):title=UpcomingEvents&param1=a&param2=b">Upcoming Events</a>
+<div class="ui grid">
+    <div class="four wide column">
+        <main-menu></main-menu>
+    </div>
+    <div class="eleven wide column">
+        <div class="ui segment" code-example="Code to output links and outlet above">
+            <div class="ui five item menu">
+                <a class="item" is="router-link" href="./main:content-basic">Basic Outlet Assignment</a>
+                <a class="item" is="router-link" href="./main:content-import(/routing-wc/examples/named-outlet/content-import.js)">Import<br>Code Splitting<br>Lazy Loading</a>
+                <a class="item" is="router-link" href="./main:content-attr-params:param1=i&param2=ii">Passing HTML Attribute Params</a>
+                <a class="item" is="router-link" href="./main:content-prop-params:.param3=x&.param4=y">Passing Object property Params</a>
+                <a class="item" is="router-link" href="./main:content-import(/routing-wc/examples/named-outlet/content-import.js):param1=attr1&param2=attr2&.param3=prop3&.param4=prop4">Import with property and attribute Params</a>
             </div>
-            <an-outlet name="main" class="ui segment" style="display: block;"><p>Some initial content.<br><br>Please click a link.</p></an-outlet>
+            <an-outlet name="main" style="display: block;"><p>Outlet not assigned yet.<br><br>Please click a link to assign content to this outlet.</p></an-outlet>
+        </div>
+        <code-example class="ui segment"></code-example>
+    </div>
+</div>
         `;
     }
 }
