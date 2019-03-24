@@ -15,8 +15,6 @@ export class MainMenuElement extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <common-style></common-style>
-
             <div class="ui vertical inverted menu full height">
                 <div class="item">
                     <div class="header">Usage</div>
