@@ -24,8 +24,8 @@ export class NamedRouting {
 
       let assignment = NamedRouting.getAssignment(name);
 
-      if (assignment) {
-        item.processNamedUrl(assignment.url);
+      if (assignment && item.canLeave(assignment.url)) {
+        item.processNamedUrl(assignment.url)
       }
     }
   }
@@ -59,9 +59,15 @@ export class NamedRouting {
 
   /**Add an assignment to the registry. Will override an assignement if one already exists with the same name. */
   static addAssignment(name, url) {
+    let lastAssignment = NamedRouting.assignments[name];
     NamedRouting.assignments[name] = {name, url};
     let namedItem = NamedRouting.getNamedItem(name);
     if (namedItem) {
+      if (namedItem.canLeave(url) === false) {
+        NamedRouting.assignments[name] = lastAssignment;
+        return false;
+      }
+
       namedItem.processNamedUrl(url);
     }
   }
@@ -112,18 +118,49 @@ export class NamedRouting {
     if (match) {
       // Polymer server does not like the period in the import statement
       let urlEscaped = match[2].replace(/_dot_/g, '.');
+      let routeCancelled = false;
       if (supressAdding !== true) {
-        NamedRouting.addAssignment(match[1], urlEscaped);
+        if(NamedRouting.addAssignment(match[1], urlEscaped) === false) {
+          routeCancelled = true;
+        }
       }
       return {
         name: match[1],
         url: match[2],
-        urlEscaped: urlEscaped
+        urlEscaped: urlEscaped,
+        cancelled: routeCancelled
       };
     }
 
     return null;
   }
+
+ /**
+  * Called just before leaving for another route.
+  * Fires an event 'routeOnLeave' that can be cancelled by preventing default on the event.
+  * @fires RouteElement#onRouteLeave
+  * @param {*} newRoute - the new route being navigated to
+  * @returns bool - if the currently active route can be left
+  */
+ static canLeave (newRoute)
+ {
+   /**
+      * Event that can be cancelled to prevent this route from being navigated away from.
+      * @event RouteElement#onRouteLeave
+      * @type CustomEvent
+      * @property {Object} details - The event details
+      * @property {RouteElement} details.route - The RouteElement that performed the match.
+      */
+   var canLeaveEvent = new CustomEvent(
+     'onRouteLeave',
+     {
+       bubbles: true,
+       cancelable: true,
+       composed: true,
+       detail: { route: newRoute }});
+   this.dispatchEvent(canLeaveEvent); 
+   return !canLeaveEvent.defaultPrevented;
+ }
 }
 
 NamedRouting.registry = {};

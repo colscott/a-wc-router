@@ -49,6 +49,8 @@ class OutletElement extends HTMLElement {
 
   constructor() {
     super();
+
+    this.canLeave = NamedRouting.canLeave.bind(this);
   }
 
   getName() {
@@ -80,7 +82,7 @@ class OutletElement extends HTMLElement {
     this.dispatchOuletUpdated();
   }
 
-  /**Takes in a url that contains named outlet data and renders the outlet using the information */
+  /** Takes in a url that contains named outlet data and renders the outlet using the information */
   async processNamedUrl(url, supressUrlGeneration) {
     let details = OutletElement.deserializeDataFromUrl(url);
     let options = details.options || {};

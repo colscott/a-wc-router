@@ -166,8 +166,9 @@ export class RouterElement extends HTMLElement {
 
     RouterElement._activeRouters = [];
 
-    RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers);
-    RouterElement.updateHistory(url);
+    if (RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers)) {
+      RouterElement.updateHistory(url);
+    }
   }
 
   /** Updates the location history with the new href */
@@ -317,7 +318,11 @@ export class RouterElement extends HTMLElement {
     let urlsWithoutNamedOutlets = [];
 
     for(let i = 0, iLen = urls.length; i < iLen; i++) {
-      if(!NamedRouting.parseNamedItem(urls[i])) {
+      let match = NamedRouting.parseNamedItem(urls[i]);
+      if (match && match.cancelled) {
+        return false;
+      }
+      if(!match) {
         urlsWithoutNamedOutlets.push(urls[i]);
       }
     }
@@ -329,6 +334,8 @@ export class RouterElement extends HTMLElement {
         router.performMatchOnRouter(urlsWithoutNamedOutlets[i] || '');
       }
     }
+
+    return true;
   }
 
   static splitUrlIntoRouters(url) {
@@ -470,6 +477,8 @@ export class RouterElement extends HTMLElement {
 
   constructor() {
     super();
+
+    this.canLeave = NamedRouting.canLeave.bind(this);
   }
 
   /**

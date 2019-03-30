@@ -1,3 +1,5 @@
+import { NamedRouting } from "./named-routing.js";
+
 export class RouteElement extends HTMLElement {
 
   connectedCallback(){
@@ -35,6 +37,8 @@ export class RouteElement extends HTMLElement {
 
   constructor() {
     super();
+
+    this.canLeave = NamedRouting.canLeave.bind(this);
   }
 
   _createPathSegments(url) {
@@ -206,33 +210,6 @@ export class RouteElement extends HTMLElement {
           target.setAttribute(k, v);
         }
       });
-  }
-
-  /**
-   * Called just before leaving for another route.
-   * Fires an event 'routeOnLeave' that can be cancelled by preventing default on the event.
-   * @fires RouteElement#onRouteLeave
-   * @param {*} newRoute - the new route being navigated to
-   * @returns bool - if the currently active route can be left
-   */
-  canLeave (newRoute)
-  {
-    /**
-       * Event that can be cancelled to prevent this route from being navigated away from.
-       * @event RouteElement#onRouteLeave
-       * @type CustomEvent
-       * @property {Object} details - The event details
-       * @property {RouteElement} details.route - The RouteElement that performed the match.
-       */
-    var canLeaveEvent = new CustomEvent(
-      'onRouteLeave',
-      {
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-        detail: { route: newRoute }});
-    this.dispatchEvent(canLeaveEvent); 
-    return !canLeaveEvent.defaultPrevented;
   }
 }
 
