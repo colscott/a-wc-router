@@ -1,6 +1,6 @@
 {
   "name": "a-wc-router",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Simple, Declarative, Decoupled, Web Component Router",
   "main": "./src/routes-router.js",
   "directories": {
