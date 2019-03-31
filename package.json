@@ -15,7 +15,7 @@
     "express": "^4.16.4"
   },
   "scripts": {
-    "dist": "uglifyjs src/named-routing.js src/routes-router.js src/routes-route.js src/routes-outlet.js -o dist/router.js -c -m"
+    "dist": "uglifyjs src/named-routing.js src/routes-router.js src/routes-route.js src/routes-outlet.js src/routes-link.js -o dist/router.js -c -m"
   },
   "repository": {
     "type": "git",

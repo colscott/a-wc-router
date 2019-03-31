@@ -108,6 +108,9 @@ Named outlet example:
                 detail: {
                     links: this.querySelectorAll('a') }}));
 
+    // Or register your link by giving the link "router-link" behavior
+    <a is="router-link" class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
+
 Normal routes and named routes are handled the same way.
 
 ## Navigating

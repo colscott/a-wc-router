@@ -13,11 +13,13 @@ class ContentOverviewElement extends ContentBasicElement {
             </p>
             <p>
                 Complete Example:<br>
-                &lt;a href="outlet-name:your-tag(/path/to/script.js)):attr-name=attrValue&.propName=propValue" &gt;link&lt;/a&gt;
+                <pre class="ui segment">&lt;a href="outlet-name:your-tag(/path/to/script.js)):attr-name=attrValue&.propName=propValue" &gt;link&lt;/a&gt;</pre>
             </p>
             <p>
                 Syntax: <br>
+                <div class="ui segment">
                 &lt;a href="{outlet-name}:{tag}[{(import-path)}]:[attr-name=attrValue&.prop-name=propValue...]" &gt;
+                </div>
             </p>
             <table class="ui very basic collapsing celled table">
                 <thead>

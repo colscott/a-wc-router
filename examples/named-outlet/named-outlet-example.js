@@ -1,6 +1,7 @@
 // import { RouterElement } from '../../build/es6-bundled/src/router.js'
 // import '../../src/routes-link.js';
 import '../../src/routes-outlet.js';
+import '../../src/routes-link.js';
 
 import './../shared/main-menu.js';
 import './../shared/code-example.js';
@@ -20,11 +21,11 @@ class NamedOutletExampleElement extends HTMLElement {
             
             // Register links so they can have active state for styling
             // RouterElement.registerLinks(this.querySelectorAll('.ui.menu a'));
-            window.dispatchEvent(
-                new CustomEvent(
-                    'routerLinksAdded', {
-                        detail: {
-                            links: this.querySelectorAll('[code-example] a') }}));
+            // window.dispatchEvent(
+            //     new CustomEvent(
+            //         'routerLinksAdded', {
+            //             detail: {
+            //                 links: this.querySelectorAll('[code-example] a') }}));
         }
     }
     
