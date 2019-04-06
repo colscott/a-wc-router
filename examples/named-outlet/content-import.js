@@ -41,7 +41,7 @@ class ContentImportElement extends ContentBasicElement {
                 <div style="text-align: center;">
                     <img src="/routing-wc/examples/assets/images/import-all.png" style="width: 80%"></img>
                 </div>
-                The current page being loaded was the Basic Outlet Assignment page. You can see that the content-basic.js was loaded as soon as possible. The other four scripts used for the pages not rendered were loaded after the page was ready.
+                The current page being loaded was the Basic Outlet Assignment page. You can see that the content-basic.js was loaded as soon as possible. The other scripts used for the pages not rendered were loaded after the page was ready.
             </p>
         `;
     }
