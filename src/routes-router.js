@@ -1,10 +1,11 @@
+///@ts-check
 import { NamedRouting } from './named-routing.js'
 export class RouterElement extends HTMLElement {
   /** 
    * Event handler for handling when child router is added.
    * This function is called in the scope of RouterElement for the top level collection of routers and instacnes of RotuerElement for nested router collections.
    * Used to link up RouterElements with child RouterElements even through Shadow DOM.
-   * @param {CustomEvent} - routerAdded event
+   * @param {CustomEvent} event - routerAdded event
    */
   static handlerAddRouter(event) {
     RouterElement.addRouter.call(this, event.detail.router);
@@ -26,7 +27,7 @@ export class RouterElement extends HTMLElement {
 
   /** 
    * Used to link up RouterElements with child RouterElements even through Shadow DOM.
-   * @param {RouterElement} - routerElement to add. RouterElement after the first can be thought of as auxilary RouterElements
+   * @param {RouterElement} router - routerElement to add. RouterElement after the first can be thought of as auxilary RouterElements
    */
   static addRouter(router) {
     this._routers.push(router);
@@ -47,8 +48,9 @@ export class RouterElement extends HTMLElement {
    * Global handler for hash changes
    */
   static changeHash() {
-    let hash = RouterElement._getHash();
-    RouterElement.dispatch(_changeHash(hash));
+    // TODO
+    // let hash = RouterElement._getHash();
+    // RouterElement.dispatch(_changeHash(hash));
   }
 
   /**
@@ -394,6 +396,9 @@ export class RouterElement extends HTMLElement {
             activeClassName: activeClassName,
             routerMatches: matches
           };
+          for (let j = 0, jLen = matches.named.length; j < jLen; j++) {
+            NamedRouting.prefetchNamedOutletImports(matches.named[j]);
+          }
         }
       }
     }
@@ -404,18 +409,29 @@ export class RouterElement extends HTMLElement {
     RouterElement.updateAnchorsStatus();
   }
 
-  static sanitizeLinkHref(linkElement) {
-    let href = RouterElement._getSameOriginLinkHref(linkElement);
+  /**
+   * @typedef {Object} AssignmentMatches
+   * @property {string[]} routes - Assignments of type router
+   * @property {import('./named-routing').NamedMatch[]} named - Assignments of type namedItems
+   */
+  /**
+   * 
+   * @param {(MouseEvent|HTMLAnchorElement|string)} hrefSource - The source of the new url to handle. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
+   * @returns {AssignmentMatches} assignmentMatches
+   * 
+   */
+  static sanitizeLinkHref(hrefSource) {
+    let href = RouterElement._getSameOriginLinkHref(hrefSource);
     let url = new URL(href);
     let hash = RouterElement._getHash();
-    let path = window.decodeURIComponent(url.pathname);
+    let path = decodeURIComponent(url.pathname);
     let query = url.search.substring(1);
     let basePathLength = RouterElement.baseUrlSansHost().length;
-    url = path.substr(basePathLength);
-    if (url[0] === '(') {
-      url = url.substr(1,url.length - 2);
+    let urlStr = path.substr(basePathLength);
+    if (urlStr[0] === '(') {
+      urlStr = urlStr.substr(1, urlStr.length - 2);
     }
-    let urls = RouterElement.splitUrlIntoRouters(url);
+    let urls = RouterElement.splitUrlIntoRouters(urlStr);
     let namedMatches = [];
     let routerMatches = [];
     for(let i = 0, iLen = urls.length; i < iLen; i++) {
@@ -564,7 +580,10 @@ export class RouterElement extends HTMLElement {
   //   }
   // }
 
-  /**Takes in a url that contains named router data and renders the router using the information */
+  /**
+   * Takes in a url that contains named router data and renders the router using the information
+   * @param {string} url to process as a named item
+   */
   processNamedUrl(url) {
     return this.performMatchOnRouter(url);
   }
@@ -834,7 +853,7 @@ export class RouterElement extends HTMLElement {
   // Much of this code was taken from the Polymer project iron elements
 
   static _getHash() {
-    return window.decodeURIComponent(window.location.hash.substring(1));
+    return decodeURIComponent(window.location.hash.substring(1));
   }
 
   static baseUrlSansHost() {
@@ -844,7 +863,7 @@ export class RouterElement extends HTMLElement {
 
   static _getUrl(url) {
     url = url || window.location;
-    let path = window.decodeURIComponent(url.pathname);
+    let path = decodeURIComponent(url.pathname);
     let query = url.search.substring(1);
     let hash = RouterElement._getHash(url);
     let partiallyEncodedPath = window.encodeURI(path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
@@ -863,7 +882,7 @@ export class RouterElement extends HTMLElement {
     }
     var partiallyEncodedHash = '';
     if (hash) {
-      partiallyEncodedHash = '#' + window.encodeURI(hash);
+      partiallyEncodedHash = '#' + encodeURI(hash);
     }
     return (partiallyEncodedPath + partiallyEncodedQuery + partiallyEncodedHash);
   }

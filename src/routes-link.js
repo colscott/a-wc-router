@@ -1,3 +1,4 @@
+///@ts-check
 import {RouterElement} from './routes-router.js';
 
 class RouterLinkElement extends HTMLAnchorElement {

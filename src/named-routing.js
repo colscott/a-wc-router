@@ -1,3 +1,19 @@
+///@ts-check
+/**
+  * @typedef ParseNamedOutletAsignment
+  * @property {string} elementTag
+  * @property {Map} data
+  * @property {Object} options
+  * @property {string} options.import
+  */
+/**
+  * @typedef {Object} NamedMatch
+  * @property {name} name of the route or outlet to assign to
+  * @property {string} url - The assignment url
+  * @property {string} urlEscaped - The assignment url escaped
+  * @property {boolean} cancelled - If a failed attempt at assignment was made
+  * @property {ParseNamedOutletAsignment} namedOutlet - Any named outlet assignments found
+  */
 /** 
  * Regestry for named routers and outlets. 
  * Simplifies nested routing by being able to target specific routers and outlets in a link. 
@@ -103,6 +119,7 @@ export class NamedRouting {
   /**
    * Parses a URL section and tries to get a named item from it.
    * @param {string} url
+   * @param {boolean} [supressAdding]
    * @returns {object} null if not able to parse
    */
   static parseNamedItem(url, supressAdding) {
@@ -128,11 +145,78 @@ export class NamedRouting {
         name: match[1],
         url: match[2],
         urlEscaped: urlEscaped,
-        cancelled: routeCancelled
+        cancelled: routeCancelled,
+        namedOutlet: NamedRouting.parseNamedOutletUrl(match[2])
       };
     }
 
     return null;
+  }
+
+  /**
+   * Takes a url for a named outlet assignment and parses
+   * @param {string} url
+   * @returns {ParseNamedOutletAsignment|null} null is returned if the url could not be parsed into a named outlet assignment
+   */
+  static parseNamedOutletUrl(url) {
+    let match = url.match(/^([\w-]+)(\(.*?\))?(?:\:(.+))?/);
+    if (match) {
+      var data = new Map();
+      
+      if (match[3]) {
+        var keyValues = match[3].split('&');
+        for (var i = 0, iLen = keyValues.length; i < iLen; i++) {
+          let keyValue = keyValues[i].split('=');
+          data.set(decodeURIComponent(keyValue[0]), decodeURIComponent(keyValue[1]));
+        }
+      }
+      let elementTag = match[1];
+      let importPath = match[2] && match[2].substr(1, match[2].length - 2);
+      let options = { import: importPath };
+      return {
+        elementTag,
+        data,
+        options
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Prefetches an import module so that it is available when the link is activated
+   * @param {NamedMatch} namedAssignment item assignment
+   */
+  static prefetchNamedOutletImports(namedAssignment) {
+    if (namedAssignment.namedOutlet && namedAssignment.namedOutlet.options && namedAssignment.namedOutlet.options.import) {
+      NamedRouting.pageReady().then(() => NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import));
+    }
+  }
+
+  static importCustomElement(importSrc, tagName) {
+    if (importSrc && customElements.get(tagName) === undefined) {
+      import(importSrc);
+    }
+  }
+
+  /**
+   * 
+   */
+  static pageReady() { 
+    if (!NamedRouting.pageReadyPromise) {
+      NamedRouting.pageReadyPromise = document.readyState === 'complete'
+      ? Promise.resolve()  
+      : new Promise((resolve, reject) => {
+        let callback = () => {
+          if (document.readyState === 'complete') {
+            document.removeEventListener('readystatechange', callback);
+            resolve();
+          }
+        };
+        document.addEventListener('readystatechange', callback);
+      });
+    }
+
+    return NamedRouting.pageReadyPromise;
   }
 
  /**

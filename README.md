@@ -23,6 +23,10 @@ Then enter this url in the browser:
     http://localhost:3000/app/examples/named-outlet/
 
 ## Basic Routing
+Routing Web Component comes with two main ways of routing.
+- Declaritive routing using router, routes and outlets
+- A simpler, but still powerful and declarative, named outlet approach
+
 ### Named Outlet example
 Routing can also be acheived without Routing and Routes. You can set content by targeting an outlet by name and injecting a custom element into it. You may have as many named outlets on the page as you like.
 
@@ -30,7 +34,7 @@ Routing can also be acheived without Routing and Routes. You can set content by 
     <an-outlet name="main">Please click a link</an-outlet>
 
     // Define the link anywhere in the application
-    // This example also passes a HTTML attribute 'accountNumber' to the wc-account-details Web Component
+    // This example also passes a HTML attribute 'accountNumber' to the wc-account-details Web Component
     // Format is (outlet-name:tag-name-to-inject(/optional/url/for/importing/script.js):param1=value1&param2=value2)
     <a href="/(main:user-main)">click for user</a>
     <a href="/(main:item-main)">click for item</a>
@@ -48,7 +52,7 @@ Routing can also be acheived without Routing and Routes. You can set content by 
 
     <a href='user'>click for user</a>
     <a href='item'>click for item</a>
-
+## Basic Routing in more detail
 ## Named Outlets
 You can also target outlets without using routing at all. This is an extreamly simple way to create a scalable routing application.
 
@@ -70,7 +74,7 @@ Example:
     <an-outlet name="account-details">Please select an account</an-outlet>
 
     // Define the link anywhere in the application
-    // This example also passes a HTTML attribute 'accountNumber' to the wc-account-details Web Component
+    // This example also passes a HTML attribute 'accountNumber' to the wc-account-details Web Component
     <a class="item" href="/(account-details:wc-account-details:accountNumber=${account.number})">
 
 

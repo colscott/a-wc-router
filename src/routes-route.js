@@ -1,3 +1,4 @@
+///@ts-check
 import { NamedRouting } from "./named-routing.js";
 
 export class RouteElement extends HTMLElement {
@@ -168,7 +169,7 @@ export class RouteElement extends HTMLElement {
   /**
    * Generates content for this route.
    * @param {Object} attributes - Object of properties that will be applied to the content. Only applies if the content was not generated form a Template.
-   * @returns {string|DocumentFragement|HTMLElement} - The resulting generated content.
+   * @returns {Promise<string>|Promise<DocumentFragment>|Promise<HTMLElement>} - The resulting generated content.
    */
   async getContent(attributes = {}) {
     let content = this.content;
@@ -177,7 +178,7 @@ export class RouteElement extends HTMLElement {
       let importAttr = this.getAttribute('import');
       let tagName = this.getAttribute('element');
 
-      await RouteElement.importCustomElement(importAttr, tagName);
+      await NamedRouting.importCustomElement(importAttr, tagName);
 
       if (tagName) {
         // TODO support if tagName is a function that is called and will return the content
@@ -194,12 +195,6 @@ export class RouteElement extends HTMLElement {
     RouteElement.setData(content, attributes);
 
     return this.content = content;
-  }
-
-  static async importCustomElement(importSrc, tagName) {
-    if (importSrc && customElements.get(tagName) === undefined) {
-      await import(importSrc);
-    }
   }
 
   static setData(target, data) {

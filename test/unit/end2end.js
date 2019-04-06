@@ -20,7 +20,7 @@ class End2EndElement extends HTMLElement {
 
     render() {
         this.innerHTML = `
-        <a href="/components/a-wc-router/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
+        <a href="/components/routing-wc/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
         <div id="mocha">
           <p><a href=".">Index</a></p>
         </div>
@@ -330,7 +330,7 @@ class End2EndElement extends HTMLElement {
             });
 
             it('absolute path should match', function (done) {
-            clickAndTest({ href: "/components/a-wc-router/test/unit/template" }, 'Hello Template', done);
+            clickAndTest({ href: "/components/routing-wc/test/unit/template" }, 'Hello Template', done);
             });
         });
 
