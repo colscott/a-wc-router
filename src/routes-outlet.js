@@ -3,7 +3,7 @@ import { NamedRouting } from './named-routing.js'
 import { RouterElement } from './routes-router.js'
 import { RouteElement } from './routes-route.js'
 
-class OutletElement extends HTMLElement {
+export class OutletElement extends HTMLElement {
 
   connectedCallback() {
     if (this.isConnected) {
@@ -47,7 +47,7 @@ class OutletElement extends HTMLElement {
    * @fires OutletElement#onOutletUpdated
    * @param {string|DocumentFragment|HTMLElement} content - Content that will replace the current content of the outlet
    */
-  renderContent(content) {
+  renderOutletContent(content) {
     this.innerHTML = '';
     // console.log('outlet rendered: ' + this.outletName, content);
 
@@ -86,7 +86,7 @@ class OutletElement extends HTMLElement {
     let element = document.createElement(details.elementTag);
     RouteElement.setData(element, data || {});
 
-    this.renderContent(element);
+    this.renderOutletContent(element);
 
     if (!supressUrlGeneration) {
       RouterElement.updateHistory('');

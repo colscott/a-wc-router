@@ -27,10 +27,21 @@ let urlEscaped=match[2].replace(/_dot_/g,"."),routeCancelled=!1;if(!0!==supressA
      * Takes a url for a named outlet assignment and parses
      * @param {string} url
      * @returns {ParseNamedOutletAsignment|null} null is returned if the url could not be parsed into a named outlet assignment
-     */static parseNamedOutletUrl(url){let match=url.match(/^([\w-]+)(\(.*?\))?(?:\:(.+))?/);if(match){var data=new Map;if(match[3]){for(var keyValues=match[3].split("&"),i=0,iLen=keyValues.length;i<iLen;i++){let keyValue=keyValues[i].split("=");data.set(decodeURIComponent(keyValue[0]),decodeURIComponent(keyValue[1]))}}let elementTag=match[1],importPath=match[2]&&match[2].substr(1,match[2].length-2),options={import:importPath};return{elementTag,data,options}}return null}/**
+     */static parseNamedOutletUrl(url){let match=url.match(/^([/\w-]+)(\(.*?\))?(?:\:(.+))?/);if(match){var data=new Map;if(match[3]){for(var keyValues=match[3].split("&"),i=0,iLen=keyValues.length;i<iLen;i++){let keyValue=keyValues[i].split("=");data.set(decodeURIComponent(keyValue[0]),decodeURIComponent(keyValue[1]))}}let elementTag=match[1],importPath=match[2]&&match[2].substr(1,match[2].length-2),inferredElementTag=NamedRouting.inferCustomElementTagName(elementTag);if(!importPath){importPath=NamedRouting.inferCustomElementImportPath(elementTag,inferredElementTag)}let options={import:importPath};return{elementTag:inferredElementTag,data,options}}return null}/**
+     * @param {string} importStyleTagName
+     * @param {string} elementTag
+     * @returns {string} the custom element import path infered from the import style string
+     */static inferCustomElementImportPath(importStyleTagName,elementTag){if(customElements.get(elementTag)!==void 0){// tag is loaded. no need for import.
+return void 0}let inferredPath=importStyleTagName,lastForwardSlash=inferredPath.lastIndexOf("/");if(-1===lastForwardSlash){inferredPath="/"+inferredPath}let dotIndex=inferredPath.indexOf(".");if(-1===dotIndex){inferredPath+=".js"}return inferredPath}/**
+     * @param {string} elementTag
+     * @returns {string} the custom element tag name infered from import style string
+     */static inferCustomElementTagName(elementTag){let inferredTagName=elementTag,lastForwardSlash=inferredTagName.lastIndexOf("/");// get class name from path
+if(-1<lastForwardSlash){inferredTagName=inferredTagName.substring(lastForwardSlash+1)}// get class name from file name
+let dotIndex=inferredTagName.indexOf(".");if(-1<dotIndex){inferredTagName=inferredTagName.substring(0,dotIndex-1)}// to kebab case
+inferredTagName=inferredTagName.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase();return inferredTagName}/**
      * Prefetches an import module so that it is available when the link is activated
      * @param {NamedMatch} namedAssignment item assignment
-     */static prefetchNamedOutletImports(namedAssignment){if(namedAssignment.namedOutlet&&namedAssignment.namedOutlet.options&&namedAssignment.namedOutlet.options.import){NamedRouting.pageReady().then(()=>NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import))}}static importCustomElement(importSrc,tagName){if(importSrc&&customElements.get(tagName)===void 0){import(importSrc)}}/**
+     */static prefetchNamedOutletImports(namedAssignment){if(namedAssignment.namedOutlet&&namedAssignment.namedOutlet.options&&namedAssignment.namedOutlet.options.import){NamedRouting.pageReady().then(()=>NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import))}}static async importCustomElement(importSrc,tagName){if(importSrc&&customElements.get(tagName)===void 0){await import(importSrc)}}/**
      * 
      */static pageReady(){if(!NamedRouting.pageReadyPromise){NamedRouting.pageReadyPromise="complete"===document.readyState?Promise.resolve():new Promise((resolve,reject)=>{let callback=()=>{if("complete"===document.readyState){document.removeEventListener("readystatechange",callback);resolve()}};document.addEventListener("readystatechange",callback)})}return NamedRouting.pageReadyPromise}/**
      * Called just before leaving for another route.
@@ -44,7 +55,9 @@ let urlEscaped=match[2].replace(/_dot_/g,"."),routeCancelled=!1;if(!0!==supressA
        * @type CustomEvent
        * @property {Object} details - The event details
        * @property {RouteElement} details.route - The RouteElement that performed the match.
-       */var canLeaveEvent=new CustomEvent("onRouteLeave",{bubbles:!0,cancelable:!0,composed:!0,detail:{route:newRoute}});this.dispatchEvent(canLeaveEvent);return!canLeaveEvent.defaultPrevented}}NamedRouting.registry={};NamedRouting.assignments={};var namedRouting={NamedRouting:NamedRouting};///@ts-check
+       */var canLeaveEvent=new CustomEvent("onRouteLeave",{bubbles:!0,cancelable:!0,composed:!0,detail:{route:newRoute}});// @ts-ignore
+// This method is designed to be bound to a Custom Element instance. It located in here for general visibility.
+this.dispatchEvent(canLeaveEvent);return!canLeaveEvent.defaultPrevented}}NamedRouting.pageReadyPromise=void 0;NamedRouting.registry={};NamedRouting.assignments={};var namedRouting={NamedRouting:NamedRouting};///@ts-check
 class RouterElement extends HTMLElement{/** 
    * Event handler for handling when child router is added.
    * This function is called in the scope of RouterElement for the top level collection of routers and instacnes of RotuerElement for nested router collections.
@@ -64,8 +77,8 @@ class RouterElement extends HTMLElement{/**
 /**
    * Global handler for url changes.
    * Should be called if the user changes the URL via the URL bar or navigating history
-   */static changeUrl(){let hash=RouterElement._getHash(),path=window.decodeURIComponent(window.location.pathname),query=window.location.search.substring(1),oldRoute=RouterElement._route;if(!RouterElement._initialized){return!1}if(oldRoute.path===path&&oldRoute.query===query&&oldRoute.hash===hash){// Nothing to do, the current URL is a representation of our properties.
-return!1}var newUrl=RouterElement._getUrl(window.location);RouterElement.dispatch(newUrl)}/**
+   */static changeUrl(){let hash=RouterElement._getHash(),path=decodeURIComponent(window.location.pathname),query=window.location.search.substring(1),oldRoute=RouterElement._route;if(!RouterElement._initialized){return!1}if(oldRoute.path===path&&oldRoute.query===query&&oldRoute.hash===hash){// Nothing to do, the current URL is a representation of our properties.
+return!1}var newUrl=RouterElement._getUrl(window.location);RouterElement.dispatch(newUrl,!0)}/**
      * Global handler for page clicks. Filters out and handles clicks from links.
      * @param {(MouseEvent|HTMLAnchorElement|string)} navigationSource - The source of the new url to navigate to. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
      */static navigate(navigationSource){let event=null,anchor=null;if(navigationSource instanceof Event){event=navigationSource;// If already handled and canceled
@@ -79,16 +92,17 @@ if(event.defaultPrevented){return}}else if("string"!==typeof navigationSource){a
 // entry or fire a change event.
 if(href===window.location.href){return}let url=new URL(href);var newUrl=RouterElement._getUrl(url);RouterElement.dispatch(newUrl)}/**
      * Common entry point that starts the routing process.
-     * @param {String} url
+     * @param {string} url
+     * @param {boolean} [skipHistory]
      * @fires RouterElement#onRouteCancelled
-     */static dispatch(url){let basePath=RouterElement.baseUrlSansHost(),shortUrl=url.substr(basePath.length);RouterElement._route={url:shortUrl// Check if all current routes wil let us navigate away
+     */static dispatch(url,skipHistory){let basePath=RouterElement.baseUrlSansHost(),shortUrl=url.substr(basePath.length);RouterElement._route={url:shortUrl// Check if all current routes wil let us navigate away
 };if(RouterElement._activeRouters.length&&!1===RouterElement._activeRouters.every(r=>r.route.canLeave(RouterElement._route))){/**
        * Event that fires if a RouteElement refuses to let us perform routing.
        * @event RouterElement#onRouteCancelled
        * @type CustomEvent
        * @property {Object} details - The event details
        * @property {RouteElement} details.url - The url that was trying to be matched.
-       */RouterElement._activeRouters[0].router.dispatchEvent(new CustomEvent("onRouteCancelled",{bubbles:!0,composed:!0,detail:{shortUrl}}));return}RouterElement._activeRouters=[];if(RouterElement.performMatchOnRouters(shortUrl,RouterElement._routers)){RouterElement.updateHistory(url)}}/** Updates the location history with the new href */static updateHistory(href){let urlState=RouterElement.getUrlState(),url=urlState;if(2===url.length){url=href}else{url=document.baseURI+url}// Need to use a full URL in case the containing page has a base URI.
+       */RouterElement._activeRouters[0].router.dispatchEvent(new CustomEvent("onRouteCancelled",{bubbles:!0,composed:!0,detail:{shortUrl}}));return}RouterElement._activeRouters=[];if(RouterElement.performMatchOnRouters(shortUrl,RouterElement._routers)&&!0!==skipHistory){RouterElement.updateHistory(url)}}/** Updates the location history with the new href */static updateHistory(href){let urlState=RouterElement.getUrlState(),url=urlState;if(2===url.length){url=href}else{url=document.baseURI+url}// Need to use a full URL in case the containing page has a base URI.
 let fullNewUrl=new URL(url,window.location.protocol+"//"+window.location.host).href,oldRoute=RouterElement._route,now=window.performance.now(),shouldReplace=oldRoute._lastChangedAt+RouterElement._dwellTime>now;oldRoute._lastChangedAt=now;if(shouldReplace){window.history.replaceState({},"",fullNewUrl)}else{window.history.pushState({},"",fullNewUrl)}RouterElement.updateAnchorsStatus(urlState)}/** Sets the active status of any registered links based on the current URL */static updateAnchorsStatus(url){url=url||RouterElement.getUrlState();let currentAnchors=RouterElement._anchors,nextAnchors=[];// Tidy up any unconnected anchors
 for(let i=0,iLen=currentAnchors.length;i<iLen;i++){if(!0===currentAnchors[i].a.isConnected){let link=currentAnchors[i];nextAnchors[nextAnchors.length]=link;link.a.classList.remove(link.a.activeClassName||"active")}}let urlFragments=url.split("::");nextUrlFragment:for(let j=0,jLen=urlFragments.length;j<jLen;j++){let urlFragment=urlFragments[j],urlFragNamedItemMatch=NamedRouting.parseNamedItem(urlFragment,!0);nextLink:for(let i=0,iLen=nextAnchors.length,link;i<iLen;i++){link=nextAnchors[i];if(link&&link.a.classList.contains(link.a.activeClassName||"active")){continue nextLink}if(link){if(link.routerMatches){let named=link.routerMatches.named,routes=link.routerMatches.routes;if(urlFragNamedItemMatch){for(let k=0,kLen=named.length;k<kLen;k++){if(named[k].name==urlFragNamedItemMatch.name){// TODO strip import out of both before compare
 if(named[k].url==urlFragNamedItemMatch.urlEscaped){// full match on named item
@@ -121,8 +135,10 @@ RouterElement._anchors=nextAnchors;RouterElement.updateAnchorsStatus()}/**
          * @param {(MouseEvent|HTMLAnchorElement|string)} hrefSource - The source of the new url to handle. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
          * @returns {AssignmentMatches} assignmentMatches
          * 
-         */static sanitizeLinkHref(hrefSource){let href=RouterElement._getSameOriginLinkHref(hrefSource),url=new URL(href),hash=RouterElement._getHash(),path=decodeURIComponent(url.pathname),query=url.search.substring(1),basePathLength=RouterElement.baseUrlSansHost().length,urlStr=path.substr(basePathLength);if("("===urlStr[0]){urlStr=urlStr.substr(1,urlStr.length-2)}let urls=RouterElement.splitUrlIntoRouters(urlStr),namedMatches=[],routerMatches=[];for(let i=0,iLen=urls.length,namedMatch;i<iLen;i++){namedMatch=NamedRouting.parseNamedItem(urls[i],!0);if(namedMatch){namedMatches.push(namedMatch)}else{routerMatches.push(urls[i])}}return{named:namedMatches,routes:routerMatches}}disconnectedCallback(){RouterElement.removeRouter.call(this._parentRouter,this);this.removeEventListener("routerAdded",this.addRouter,!1);if(this.getName()){NamedRouting.removeNamedItem(this.getName())}}connectedCallback(){if(!this.created){this.created=!0;// IE workaround for the lack of document.baseURI property
-let baseURI=document.baseURI;if(baseURI===void 0){let baseTags=document.getElementsByTagName("base");baseURI=baseTags.length?baseTags[0].href:document.URL;document.baseURI=baseURI}this._routers=[];RouterElement.initialize()}if(this.isConnected){/**
+         */static sanitizeLinkHref(hrefSource){let href=RouterElement._getSameOriginLinkHref(hrefSource),url=new URL(href),hash=RouterElement._getHash(),path=decodeURIComponent(url.pathname),query=url.search.substring(1),basePathLength=RouterElement.baseUrlSansHost().length,urlStr=path.substr(basePathLength);if("("===urlStr[0]){urlStr=urlStr.substr(1,urlStr.length-2)}let urls=RouterElement.splitUrlIntoRouters(urlStr),namedMatches=[],routerMatches=[];for(let i=0,iLen=urls.length,namedMatch;i<iLen;i++){namedMatch=NamedRouting.parseNamedItem(urls[i],!0);if(namedMatch){namedMatches.push(namedMatch)}else{routerMatches.push(urls[i])}}return{named:namedMatches,routes:routerMatches}}disconnectedCallback(){RouterElement.removeRouter.call(this._parentRouter,this);// this.removeEventListener('onRouterAdded', this.handlerAddRouter, false);
+if(this.getName()){NamedRouting.removeNamedItem(this.getName())}}connectedCallback(){if(!this.created){this.created=!0;// IE workaround for the lack of document.baseURI property
+let baseURI=document.baseURI;if(baseURI===void 0){let baseTags=document.getElementsByTagName("base");baseURI=baseTags.length?baseTags[0].href:document.URL;// @ts-ignore
+document.baseURI=baseURI}this._routers=[];RouterElement.initialize()}if(this.isConnected){/**
        * Internal event used to plumb together the routers. Do not interfer with.
        * @event RouterElement#onRouterAdded
        * @type CustomEvent
@@ -130,18 +146,18 @@ let baseURI=document.baseURI;if(baseURI===void 0){let baseTags=document.getEleme
        * @property {RouteElement} details.url - The url that was trying to be matched.
        */var routerAddedEvent=new CustomEvent("onRouterAdded",{bubbles:!0,cancelable:!0,composed:!0,detail:{router:this}});this.dispatchEvent(routerAddedEvent);this._parentRouter=routerAddedEvent.detail.parentRouter;this.addEventListener("onRouterAdded",this.handlerAddRouter=RouterElement.handlerAddRouter.bind(this),!1);NamedRouting.addNamedItem(this)}}constructor(){super();this.canLeave=NamedRouting.canLeave.bind(this)}/**
      * Global initialization
-     */static initialize(){if(!RouterElement._initialized){RouterElement._initialized=!0;RouterElement._activeRouters=[];RouterElement._anchors=[];RouterElement._route={};RouterElement._routers=[];RouterElement._encodeSpaceAsPlusInQuery=!1;RouterElement._dwellTime=2e3;//RouterElement.whiteListRegEx = this.getAttribute('base-white-list') || '';
+     */static initialize(){if(!RouterElement._initialized){RouterElement._initialized=!0;//RouterElement.whiteListRegEx = this.getAttribute('base-white-list') || '';
 window.addEventListener("popstate",RouterElement.changeUrl,!1);window.addEventListener("click",RouterElement.navigate,!1);// Listen for top level routers being added
 window.addEventListener("onRouterAdded",RouterElement.handlerAddRouter.bind(RouterElement),!1);// Listen for link registration
 window.addEventListener("routerLinksAdded",RouterElement.handlerRouterLinksAdded.bind(RouterElement),!1);// Listen for navigate requests
-window.addEventListener("navigate",RouterElement.handlerNavigate.bind(RouterElement),!1);RouterElement.changeUrl(decodeURIComponent(location.pathname))}}getName(){if(this.routerName===void 0){this.routerName=this.getAttribute("name")}return this.routerName}getCurrentMatch(){if(!this._currentMatch&&this._parentRouter._currentMatch){this._currentMatch={remainder:this._parentRouter._currentMatch.remainder};// TODO get remainder from parent but ony take this routers url from it
+window.addEventListener("navigate",RouterElement.handlerNavigate.bind(RouterElement),!1);RouterElement.changeUrl()}}getName(){if(this.routerName===void 0){this.routerName=this.getAttribute("name")}return this.routerName}getCurrentMatch(){if(!this._currentMatch&&this._parentRouter._currentMatch){this._currentMatch={remainder:this._parentRouter._currentMatch.remainder};// TODO get remainder from parent but ony take this routers url from it
 // e.g. split :: and take the firs put the rest back
 // TODO if we support adding a router name to the URL this is where we would check for it: (myRouter:users/main) --> target router named myRouter with url users/main
 let remainder=this._currentMatch.remainder;if(remainder&&"("===remainder[0]){remainder=RouterElement.splitUrlIntoRouters(remainder.substring(1,remainder.length-2));this._currentMatch.remainder=remainder.shift();// The next line is done in in the postProcessMatch
 // this._parentRouter._currentMatch.remainder = '(' + remainder.join('::') + ')';
 }this._currentMatch.url=this._currentMatch.remainder}return this._currentMatch}/**
      * Performs matching for nested routes as they connect.
-     * @param {RouteElement} routeElement 
+     * @param {import('./routes-route').RouteElement} routeElement 
      */addRoute(routeElement){console.log("route added: "+routeElement.getAttribute("path"));if(!this.hasMatch){let currentMatch=this.getCurrentMatch();if(currentMatch){if(currentMatch.remainder){this.performMatchOnRoute(currentMatch.remainder,routeElement)}}else{this.performMatchOnRoute(RouterElement._route.url,routeElement)}}}// TODO 
 // go (url)
 // {
@@ -156,14 +172,20 @@ let remainder=this._currentMatch.remainder;if(remainder&&"("===remainder[0]){rem
    */processNamedUrl(url){return this.performMatchOnRouter(url)}/**
      * Performs route matching by iterating through routes looking for matches
      * @param {String} url  
-     */performMatchOnRouter(url){this.hasMatch=!1;this._currentMatch={remainder:url};let routeElements=this._getRouterElements("a-route"),outletElement=this._getRouterElements("an-outlet")[0],match=null;for(let i=0,iLen=routeElements.length,routeElement;i<iLen;i++){routeElement=routeElements[i];match=this.performMatchOnRoute(url,routeElement);if(null!=match){console.log("route matched -> ",routeElement.getAttribute("path"));break}}if(null===match){if(outletElement.renderContent){outletElement.renderContent("No matching route for url "+url+" \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");console&&console.error&&console.error("404 - Route not found for url "+url)}return null}return match}performMatchOnRoute(url,routeElement){// RouteElement not connected yet
+     */performMatchOnRouter(url){this.hasMatch=!1;this._currentMatch={remainder:url};let routeElements=this.getRouteElements(),outletElement=this.getOutletElement(),match=null;for(let i=0,iLen=routeElements.length,routeElement;i<iLen;i++){routeElement=routeElements[i];match=this.performMatchOnRoute(url,routeElement);if(null!=match){console.log("route matched -> ",routeElement.getAttribute("path"));break}}if(null===match){if(outletElement.renderOutletContent){outletElement.renderOutletContent("No matching route for url "+url+" \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");console&&console.error&&console.error("404 - Route not found for url "+url)}return null}return match}performMatchOnRoute(url,routeElement){// RouteElement not connected yet
 if(!routeElement.match){return null}let match=routeElement.match(url)||null;if(null!=match){if(match.redirect){// TODO If the route being redirected to comes after then it might not have loaded yet
 return this.performMatchOnRouter(match.redirect)}let activeRouters=RouterElement._activeRouters;activeRouters.push({route:routeElement,router:this,match:match});this._currentMatch=match;if(match.useCache){// Content is already loaded so addRoute will not get called. Start the matching for children manually.
-if(this._routers&&match.remainder){RouterElement.performMatchOnRouters(match.remainder,this._routers)}}else{let outletElement=this._getRouterElements("an-outlet")[0];routeElement.getContent(match.data).then(content=>outletElement.renderContent(content))}this.postProcessMatch()}return match}postProcessMatch(){this.hasMatch=!0;if(this._parentRouter._currentMatch){let parentMatch=this._parentRouter._currentMatch,remainder=parentMatch.remainder;// TODO get remainder from parent but ony take this routers url from it
+if(this._routers&&match.remainder){RouterElement.performMatchOnRouters(match.remainder,this._routers)}}else{let outletElement=this.getOutletElement();routeElement.getContent(match.data).then(content=>outletElement.renderOutletContent(content))}this.postProcessMatch()}return match}postProcessMatch(){this.hasMatch=!0;if(this._parentRouter._currentMatch){let parentMatch=this._parentRouter._currentMatch,remainder=parentMatch.remainder;// TODO get remainder from parent but ony take this routers url from it
 // e.g. split :: and take the first put the rest back
 // TODO if we support adding a router name to the URL this is where we would check for it: (myRouter:users/main) --> target router named myRouter with url users/main
 if(remainder&&"("===remainder[0]){remainder=remainder.substring(1,remainder.length-2)}remainder=RouterElement.splitUrlIntoRouters(remainder);remainder.shift();// this._currentMatch.remainder = remainder.shift();
 if(1<remainder.length){this._parentRouter._currentMatch.remainder="("+remainder.join("::")+")"}else if(1===remainder.length){this._parentRouter._currentMatch.remainder=remainder[0]}else{this._parentRouter._currentMatch.remainder=""}}}generateUrlFragment(){let match=this._currentMatch;if(!match){return""}let urlFrag=match.url;if(match.remainder){urlFrag+="/"+match.remainder}if(this._routers&&this._routers.length){urlFrag+="/(";for(let i=0,iLen=this._routers.length;i<iLen;i++){if(0<i){urlFrag+="::"}urlFrag+=this._routers[i].generateUrlFragment()}urlFrag+=")"}return urlFrag}/**
+     * @returns {import('./routes-outlet').OutletElement}
+     */getOutletElement(){// @ts-ignore
+return this._getRouterElements("an-outlet")[0]}/**
+     * @returns {import('./routes-route').RouteElement[]}
+     */getRouteElements(){// @ts-ignore
+return this._getRouterElements("a-route")}/**
      * Finds immediate child route elements
      */_getRouterElements(tagName){let routeElements=[];tagName=tagName.toLowerCase();for(var i=0,iLen=this.children.length;i<iLen;i++){let elem=this.children[i];if(elem.tagName.toLowerCase()===tagName){routeElements.push(elem)}}return routeElements}/**
      * Returns the absolute URL of the link (if any) that this click event is clicking on, if we can and should override the resulting full page navigation. Returns null otherwise.
@@ -172,7 +194,8 @@ if(1<remainder.length){this._parentRouter._currentMatch.remainder="("+remainder.
      */static _getSameOriginLinkHref(hrefSource){let href=null,anchor=null;if(hrefSource instanceof Event){let event=hrefSource;// We only care about left-clicks.
 if(0!==event.button){return null}// We don't want modified clicks, where the intent is to open the page
 // in a new tab.
-if(event.metaKey||event.ctrlKey){return null}let eventPath=event.path;for(var i=0;i<eventPath.length;i++){let element=eventPath[i];if("A"===element.tagName&&element.href){anchor=element;break}}// If there's no link there's nothing to do.
+if(event.metaKey||event.ctrlKey){return null}// @ts-ignore
+let eventPath=event.path;for(var i=0;i<eventPath.length;i++){let element=eventPath[i];if("A"===element.tagName&&element.href){anchor=element;break}}// If there's no link there's nothing to do.
 if(!anchor){return null}}else if("string"===typeof hrefSource){href=hrefSource}else{anchor=hrefSource}if(anchor){// Target blank is a new tab, don't intercept.
 if("_blank"===anchor.target){return""}// If the link is for an existing parent frame, don't intercept.
 if(("_top"===anchor.target||"_parent"===anchor.target)&&window.top!==window){return""}// If the link is a download, don't intercept.
@@ -184,11 +207,18 @@ if(window.location.origin){origin=window.location.origin}else{origin=window.loca
 // window.location.host
 let urlHost=url.host,urlPort=url.port,urlProtocol=url.protocol,isExtraneousHTTPS="https:"===urlProtocol&&"443"===urlPort,isExtraneousHTTP="http:"===urlProtocol&&"80"===urlPort;if(isExtraneousHTTPS||isExtraneousHTTP){urlHost=url.hostname}urlOrigin=urlProtocol+"//"+urlHost}if(urlOrigin!==origin){return""}let normalizedHref=url.pathname.replace(/\$_\$_/g,"::")+url.search.replace(/\$_\$_/g,"::")+url.hash.replace(/\$_\$_/g,"::");// pathname should start with '/', but may not if `new URL` is not supported
 if("/"!==normalizedHref[0]){normalizedHref="/"+normalizedHref}// If we've been configured not to handle this url... don't handle it!
-let urlSpaceRegExp=RouterElement._makeRegExp(RouterElement.whiteListRegEx);if(urlSpaceRegExp&&!urlSpaceRegExp.test(normalizedHref)){return""}// Need to use a full URL in case the containing page has a base URI.
-let fullNormalizedHref=new URL(normalizedHref,window.location.href).href;return fullNormalizedHref}static _makeRegExp(urlSpaceRegex){return RegExp(urlSpaceRegex)}// ---------- Action helpers ----------
+// let urlSpaceRegExp = RouterElement._makeRegExp(RouterElement.whiteListRegEx);
+// if (urlSpaceRegExp && !urlSpaceRegExp.test(normalizedHref)) {
+//   return '';
+// }
+// Need to use a full URL in case the containing page has a base URI.
+let fullNormalizedHref=new URL(normalizedHref,window.location.href).href;return fullNormalizedHref}// static _makeRegExp(urlSpaceRegex) {
+//   return RegExp(urlSpaceRegex);
+// }
+// ---------- Action helpers ----------
 // Much of this code was taken from the Polymer project iron elements
-static _getHash(){return decodeURIComponent(window.location.hash.substring(1))}static baseUrlSansHost(){let host=window.location.protocol+"//"+window.location.host;return document.baseURI.substr(host.length+1)}static _getUrl(url){url=url||window.location;let path=decodeURIComponent(url.pathname),query=url.search.substring(1),hash=RouterElement._getHash(url),partiallyEncodedPath=window.encodeURI(path).replace(/\#/g,"%23").replace(/\?/g,"%3F"),partiallyEncodedQuery="";if(query){partiallyEncodedQuery="?"+query.replace(/\#/g,"%23");if(RouterElement._encodeSpaceAsPlusInQuery){partiallyEncodedQuery=partiallyEncodedQuery.replace(/\+/g,"%2B").replace(/ /g,"+").replace(/%20/g,"+")}else{// required for edge
-partiallyEncodedQuery=partiallyEncodedQuery.replace(/\+/g,"%2B").replace(/ /g,"%20")}}var partiallyEncodedHash="";if(hash){partiallyEncodedHash="#"+encodeURI(hash)}return partiallyEncodedPath+partiallyEncodedQuery+partiallyEncodedHash}}RouterElement.assignedOutlets={};window.customElements.define("a-router",RouterElement);var routesRouter={RouterElement:RouterElement};///@ts-check
+static _getHash(){return decodeURIComponent(window.location.hash.substring(1))}static baseUrlSansHost(){let host=window.location.protocol+"//"+window.location.host;return document.baseURI.substr(host.length+1)}static _getUrl(url){url=url||window.location;let path=decodeURIComponent(url.pathname),query=url.search.substring(1),hash=RouterElement._getHash(),partiallyEncodedPath=encodeURI(path).replace(/\#/g,"%23").replace(/\?/g,"%3F"),partiallyEncodedQuery="";if(query){partiallyEncodedQuery="?"+query.replace(/\#/g,"%23");if(RouterElement._encodeSpaceAsPlusInQuery){partiallyEncodedQuery=partiallyEncodedQuery.replace(/\+/g,"%2B").replace(/ /g,"+").replace(/%20/g,"+")}else{// required for edge
+partiallyEncodedQuery=partiallyEncodedQuery.replace(/\+/g,"%2B").replace(/ /g,"%20")}}var partiallyEncodedHash="";if(hash){partiallyEncodedHash="#"+encodeURI(hash)}return partiallyEncodedPath+partiallyEncodedQuery+partiallyEncodedHash}}RouterElement._routers=[];RouterElement._route={};RouterElement._initialized=!1;RouterElement._activeRouters=[];RouterElement._dwellTime=2e3;RouterElement._anchors=[];RouterElement._encodeSpaceAsPlusInQuery=!1;RouterElement.assignedOutlets={};window.customElements.define("a-router",RouterElement);var routesRouter={RouterElement:RouterElement};///@ts-check
 class RouteElement extends HTMLElement{connectedCallback(){if(!this.created){this.created=!0;this.style.display="none";const baseElement=document.head.querySelector("base");this.baseUrl=baseElement&&baseElement.getAttribute("href")}if(this.isConnected){// var childrenReady = (mutationList, observer) => {
 //   observer.disconnect();
 //   this.parentNode.addRoute && this.parentNode.addRoute(this);
@@ -228,16 +258,16 @@ NamedRouting.addNamedItem(this)}RouterElement.initialize()}}disconnectedCallback
      * Replaces the content of this outlet with the supplied new content
      * @fires OutletElement#onOutletUpdated
      * @param {string|DocumentFragment|HTMLElement} content - Content that will replace the current content of the outlet
-     */renderContent(content){this.innerHTML="";// console.log('outlet rendered: ' + this.outletName, content);
+     */renderOutletContent(content){this.innerHTML="";// console.log('outlet rendered: ' + this.outletName, content);
 if("string"===typeof content){this.innerHTML=content}else{this.appendChild(content)}this.dispatchOuletUpdated()}/**
      * Takes in a url that contains named outlet data and renders the outlet using the information
      * @param {string} url
      * @param {boolean} supressUrlGeneration
      */async processNamedUrl(url,supressUrlGeneration){let details=NamedRouting.parseNamedOutletUrl(url),options=details.options||{import:null},data=details.data||new Map;if(!1===data instanceof Map){data=new Map(Object.entries(data||{}))}// If same tag name then just set the data
-if(this.children&&this.children[0]&&this.children[0].tagName.toLowerCase()==details.elementTag){RouteElement.setData(this.children[0],data||{});this.dispatchOuletUpdated();return this.children[0]}await NamedRouting.importCustomElement(options.import,details.elementTag);let element=document.createElement(details.elementTag);RouteElement.setData(element,data||{});this.renderContent(element);if(!supressUrlGeneration){RouterElement.updateHistory("")}return element}dispatchOuletUpdated(){/**
+if(this.children&&this.children[0]&&this.children[0].tagName.toLowerCase()==details.elementTag){RouteElement.setData(this.children[0],data||{});this.dispatchOuletUpdated();return this.children[0]}await NamedRouting.importCustomElement(options.import,details.elementTag);let element=document.createElement(details.elementTag);RouteElement.setData(element,data||{});this.renderOutletContent(element);if(!supressUrlGeneration){RouterElement.updateHistory("")}return element}dispatchOuletUpdated(){/**
      * Outlet updated event that fires after an Outlet replaces it's content.
      * @event OutletElement#onOutletUpdated
      * @type CustomEvent
      * @property {any} - Currently no information is passed in the event.
-     */this.dispatchEvent(new CustomEvent("onOutletUpdated",{bubbles:!0,composed:!0,detail:{}}))}}window.customElements.define("an-outlet",OutletElement);///@ts-check
-class RouterLinkElement extends HTMLAnchorElement{connectedCallback(){super.connectedCallback&&super.connectedCallback();RouterElement.initialize();window.dispatchEvent(new CustomEvent("routerLinksAdded",{detail:{links:[this]}}))}constructor(){super()}}window.customElements.define("router-link",RouterLinkElement,{extends:"a"});export{namedRouting as $namedRouting,routesRoute as $routesRoute,routesRouter as $routesRouter,NamedRouting,RouteElement,RouterElement};
+     */this.dispatchEvent(new CustomEvent("onOutletUpdated",{bubbles:!0,composed:!0,detail:{}}))}}window.customElements.define("an-outlet",OutletElement);var routesOutlet={OutletElement:OutletElement};///@ts-check
+class RouterLinkElement extends HTMLAnchorElement{connectedCallback(){RouterElement.initialize();window.dispatchEvent(new CustomEvent("routerLinksAdded",{detail:{links:[this]}}))}constructor(){super()}}window.customElements.define("router-link",RouterLinkElement,{extends:"a"});export{namedRouting as $namedRouting,routesOutlet as $routesOutlet,routesRoute as $routesRoute,routesRouter as $routesRouter,NamedRouting,OutletElement,RouteElement,RouterElement};

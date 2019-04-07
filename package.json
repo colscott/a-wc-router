@@ -1,5 +1,5 @@
 {
-  "name": "a-wc-router",
+  "name": "routing-wc",
   "version": "0.7.0",
   "description": "Simple, Declarative, Decoupled, Web Component Router, PRPL, Router, Routing, Outlet",
   "main": "./src/routes-router.js",

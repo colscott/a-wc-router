@@ -9,16 +9,16 @@ class ContentOverviewElement extends ContentBasicElement {
             The syntax of a links href attribute targeting named outlets as follows:
             <p>
                 Basic Example: <br>
-                &lt;a href="outlet-name:your-tag" &gt;link&lt;/a&gt;
+                &lt;a href="(outlet-name:your-tag)" &gt;link&lt;/a&gt;
             </p>
             <p>
                 Complete Example:<br>
-                <pre class="ui segment">&lt;a href="outlet-name:your-tag(/path/to/script.js)):attr-name=attrValue&.propName=propValue" &gt;link&lt;/a&gt;</pre>
+                <pre class="ui segment">&lt;a href="(outlet-name:your-tag(/path/to/script.js):attr-name=attrValue&.propName=propValue)" &gt;link&lt;/a&gt;</pre>
             </p>
             <p>
                 Syntax: <br>
                 <div class="ui segment">
-                &lt;a href="{outlet-name}:{tag}[{(import-path)}]:[attr-name=attrValue&.prop-name=propValue...]" &gt;
+                &lt;a href="({outlet-name}:{tag}[{(import-path)}]:[attr-name=attrValue&.prop-name=propValue...])" &gt;
                 </div>
             </p>
             <table class="ui very basic collapsing celled table">

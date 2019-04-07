@@ -159,7 +159,7 @@ export class NamedRouting {
    * @returns {ParseNamedOutletAsignment|null} null is returned if the url could not be parsed into a named outlet assignment
    */
   static parseNamedOutletUrl(url) {
-    let match = url.match(/^([\w-]+)(\(.*?\))?(?:\:(.+))?/);
+    let match = url.match(/^([/\w-]+)(\(.*?\))?(?:\:(.+))?/);
     if (match) {
       var data = new Map();
       
@@ -172,14 +172,71 @@ export class NamedRouting {
       }
       let elementTag = match[1];
       let importPath = match[2] && match[2].substr(1, match[2].length - 2);
+
+      let inferredElementTag = NamedRouting.inferCustomElementTagName(elementTag);
+      if (!importPath) {
+        importPath = NamedRouting.inferCustomElementImportPath(elementTag, inferredElementTag);
+      }
+
       let options = { import: importPath };
       return {
-        elementTag,
+        elementTag: inferredElementTag,
         data,
         options
       };
     }
     return null;
+  }
+
+  /**
+   * @param {string} importStyleTagName
+   * @param {string} elementTag
+   * @returns {string} the custom element import path infered from the import style string
+   */
+  static inferCustomElementImportPath(importStyleTagName, elementTag) {
+    if (customElements.get(elementTag) !== undefined) {
+      // tag is loaded. no need for import.
+      return undefined;
+    }
+
+    let inferredPath = importStyleTagName;
+
+    let lastForwardSlash = inferredPath.lastIndexOf('/');
+    if (lastForwardSlash === -1) {
+      inferredPath = '/' + inferredPath;
+    }
+
+    let dotIndex = inferredPath.indexOf('.');
+    if (dotIndex === -1) {
+      inferredPath += '.js';
+    }
+
+    return inferredPath;
+  }
+
+  /**
+   * @param {string} elementTag
+   * @returns {string} the custom element tag name infered from import style string
+   */
+  static inferCustomElementTagName(elementTag) {
+    let inferredTagName = elementTag;
+    
+    // get class name from path
+    let lastForwardSlash = inferredTagName.lastIndexOf('/');
+    if (lastForwardSlash > -1) {
+      inferredTagName = inferredTagName.substring(lastForwardSlash + 1);
+    }
+
+    // get class name from file name
+    let dotIndex = inferredTagName.indexOf('.');
+    if (dotIndex > -1) {
+      inferredTagName = inferredTagName.substring(0, dotIndex - 1);
+    }
+
+    // to kebab case
+    inferredTagName = inferredTagName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+    return inferredTagName;
   }
 
   /**
@@ -192,9 +249,9 @@ export class NamedRouting {
     }
   }
 
-  static importCustomElement(importSrc, tagName) {
+  static async importCustomElement(importSrc, tagName) {
     if (importSrc && customElements.get(tagName) === undefined) {
-      import(importSrc);
+      await import(importSrc);
     }
   }
 
@@ -242,10 +299,13 @@ export class NamedRouting {
        cancelable: true,
        composed: true,
        detail: { route: newRoute }});
+   // @ts-ignore
+   // This method is designed to be bound to a Custom Element instance. It located in here for general visibility.
    this.dispatchEvent(canLeaveEvent); 
    return !canLeaveEvent.defaultPrevented;
  }
 }
 
+NamedRouting.pageReadyPromise = undefined;
 NamedRouting.registry = {};
 NamedRouting.assignments = {};

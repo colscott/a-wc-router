@@ -137,7 +137,8 @@ export class RouterElement extends HTMLElement {
 
   /**
    * Common entry point that starts the routing process.
-   * @param {String} url
+   * @param {string} url
+   * @param {boolean} [skipHistory]
    * @fires RouterElement#onRouteCancelled
    */
   static dispatch(url, skipHistory) {
@@ -448,7 +449,7 @@ export class RouterElement extends HTMLElement {
 
   disconnectedCallback(){
     RouterElement.removeRouter.call(this._parentRouter, this);
-    this.removeEventListener('routerAdded', this.addRouter, false);
+    // this.removeEventListener('onRouterAdded', this.handlerAddRouter, false);
     if (this.getName()) {
       NamedRouting.removeNamedItem(this.getName());
     }
@@ -464,6 +465,7 @@ export class RouterElement extends HTMLElement {
       {
         let baseTags = document.getElementsByTagName("base");
         baseURI = baseTags.length ? baseTags[0].href : document.URL;
+        // @ts-ignore
         document.baseURI = baseURI;
       }
 
@@ -503,12 +505,6 @@ export class RouterElement extends HTMLElement {
   static initialize() {
     if (!RouterElement._initialized) {
       RouterElement._initialized = true;
-      RouterElement._activeRouters = [];
-      RouterElement._anchors = [];
-      RouterElement._route = {};
-      RouterElement._routers = [];
-      RouterElement._encodeSpaceAsPlusInQuery = false;
-      RouterElement._dwellTime = 2000;
       //RouterElement.whiteListRegEx = this.getAttribute('base-white-list') || '';
 
       window.addEventListener("popstate", RouterElement.changeUrl, false);
@@ -523,7 +519,7 @@ export class RouterElement extends HTMLElement {
       // Listen for navigate requests
       window.addEventListener('navigate', RouterElement.handlerNavigate.bind(RouterElement), false);
 
-      RouterElement.changeUrl(decodeURIComponent(location.pathname));
+      RouterElement.changeUrl();
     }
   }
 
@@ -554,7 +550,7 @@ export class RouterElement extends HTMLElement {
 
   /**
    * Performs matching for nested routes as they connect.
-   * @param {RouteElement} routeElement 
+   * @param {import('./routes-route').RouteElement} routeElement 
    */
   addRoute(routeElement) {
     console.log('route added: ' + routeElement.getAttribute('path'));
@@ -595,8 +591,8 @@ export class RouterElement extends HTMLElement {
   performMatchOnRouter(url) {
     this.hasMatch = false;
     this._currentMatch = { remainder: url };
-    let routeElements = this._getRouterElements('a-route');
-    let outletElement = this._getRouterElements('an-outlet')[0];
+    let routeElements = this.getRouteElements();
+    let outletElement = this.getOutletElement();
     let match = null;
 
     for(let i = 0, iLen = routeElements.length; i < iLen; i++) {
@@ -609,8 +605,8 @@ export class RouterElement extends HTMLElement {
     }
 
     if (match === null) {
-      if (outletElement.renderContent) {
-        outletElement.renderContent("No matching route for url " + url + " \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");
+      if (outletElement.renderOutletContent) {
+        outletElement.renderOutletContent("No matching route for url " + url + " \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");
         console && console.error &&  console.error("404 - Route not found for url " + url);
       }
       return null;
@@ -641,9 +637,9 @@ export class RouterElement extends HTMLElement {
           RouterElement.performMatchOnRouters(match.remainder, this._routers);
         }
       } else {
-        let outletElement = this._getRouterElements('an-outlet')[0];
+        let outletElement = this.getOutletElement();
         routeElement.getContent(match.data)
-          .then((content) => outletElement.renderContent(content));
+          .then((content) => outletElement.renderOutletContent(content));
       }
 
       this.postProcessMatch();
@@ -703,6 +699,22 @@ export class RouterElement extends HTMLElement {
   }
 
   /**
+   * @returns {import('./routes-outlet').OutletElement}
+   */
+  getOutletElement() {
+    // @ts-ignore
+    return this._getRouterElements('an-outlet')[0];
+  }
+
+  /**
+   * @returns {import('./routes-route').RouteElement[]}
+   */
+  getRouteElements() {
+    // @ts-ignore
+    return this._getRouterElements('a-route');
+  }
+
+  /**
    * Finds immediate child route elements
    */
   _getRouterElements(tagName) {
@@ -738,6 +750,7 @@ export class RouterElement extends HTMLElement {
         return null;
       }
 
+      // @ts-ignore
       let eventPath = event.path;
       for (var i = 0; i < eventPath.length; i++) {
         let element = eventPath[i];
@@ -835,19 +848,19 @@ export class RouterElement extends HTMLElement {
     }
 
     // If we've been configured not to handle this url... don't handle it!
-    let urlSpaceRegExp = RouterElement._makeRegExp(RouterElement.whiteListRegEx);
-    if (urlSpaceRegExp && !urlSpaceRegExp.test(normalizedHref)) {
-      return '';
-    }
+    // let urlSpaceRegExp = RouterElement._makeRegExp(RouterElement.whiteListRegEx);
+    // if (urlSpaceRegExp && !urlSpaceRegExp.test(normalizedHref)) {
+    //   return '';
+    // }
 
     // Need to use a full URL in case the containing page has a base URI.
     let fullNormalizedHref = new URL(normalizedHref, window.location.href).href;
     return fullNormalizedHref;
   }
 
-  static _makeRegExp(urlSpaceRegex) {
-    return RegExp(urlSpaceRegex);
-  }
+  // static _makeRegExp(urlSpaceRegex) {
+  //   return RegExp(urlSpaceRegex);
+  // }
 
   // ---------- Action helpers ----------
   // Much of this code was taken from the Polymer project iron elements
@@ -865,8 +878,8 @@ export class RouterElement extends HTMLElement {
     url = url || window.location;
     let path = decodeURIComponent(url.pathname);
     let query = url.search.substring(1);
-    let hash = RouterElement._getHash(url);
-    let partiallyEncodedPath = window.encodeURI(path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
+    let hash = RouterElement._getHash();
+    let partiallyEncodedPath = encodeURI(path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
     let partiallyEncodedQuery = '';
     if (query) {
       partiallyEncodedQuery = '?' + query.replace(/\#/g, '%23');
@@ -888,6 +901,14 @@ export class RouterElement extends HTMLElement {
   }
 }
 
+
+RouterElement._routers = [];
+RouterElement._route = {};
+RouterElement._initialized = false;
+RouterElement._activeRouters = [];
+RouterElement._dwellTime = 2000;
+RouterElement._anchors = [];
+RouterElement._encodeSpaceAsPlusInQuery = false;
 RouterElement.assignedOutlets = {};
 
 window.customElements.define('a-router', RouterElement);
