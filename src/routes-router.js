@@ -59,7 +59,7 @@ export class RouterElement extends HTMLElement {
    */
   static changeUrl() {
     let hash = RouterElement._getHash();
-    let path = window.decodeURIComponent(window.location.pathname);
+    let path = decodeURIComponent(window.location.pathname);
     let query = window.location.search.substring(1);
 
     let oldRoute = RouterElement._route;
@@ -73,7 +73,7 @@ export class RouterElement extends HTMLElement {
     }
 
     var newUrl = RouterElement._getUrl(window.location);
-    RouterElement.dispatch(newUrl);
+    RouterElement.dispatch(newUrl, true);
   }
   
   /**
@@ -140,7 +140,7 @@ export class RouterElement extends HTMLElement {
    * @param {String} url
    * @fires RouterElement#onRouteCancelled
    */
-  static dispatch(url) {
+  static dispatch(url, skipHistory) {
     let basePath = RouterElement.baseUrlSansHost();
     let shortUrl = url.substr(basePath.length);
     RouterElement._route = {
@@ -168,7 +168,7 @@ export class RouterElement extends HTMLElement {
 
     RouterElement._activeRouters = [];
 
-    if (RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers)) {
+    if (RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
       RouterElement.updateHistory(url);
     }
   }
