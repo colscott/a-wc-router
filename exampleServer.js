@@ -14,9 +14,9 @@ function main(req, res) {
     res.sendFile(`${__dirname}/examples/index.html`);
 };
 
-app.get('/app/examples/', main);
-app.get('/app/examples/index.html', main);
-app.get('/app/examples/:example', spaHandler);
-app.get('/app/examples/:example/*', spaHandler);
+app.get('/routing-wc/examples/', main);
+app.get('/routing-wc/examples/index.html', main);
+app.get('/routing-wc/examples/:example', spaHandler);
+app.get('/routing-wc/examples/:example/*', spaHandler);
 
 app.listen(process.env.PORT || 3000);

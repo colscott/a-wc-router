@@ -30,7 +30,7 @@ class RouterExampleElement extends HTMLElement {
     <div class="eleven wide column">
         <code-example class="ui segment"></code-example>
         <div class="ui segment" code-example="Code to output links and outlet below">
-<div class="ui nine item menu">
+<div class="ui one item menu">
     <a  class="item" is="router-link" href="webcomponent">Overiew</a>
 </div>
 <a-router  style="display: block;">
@@ -44,7 +44,7 @@ class RouterExampleElement extends HTMLElement {
     <a-route path="/webcomponent-data4/:anyNumOfParam*"  element="content-params"></a-route>
     <a-route path="/webcomponent-data5/:firstParam/:secondParam"  element="content-params"></a-route>
     <a-route path="/template"><template>Hello Template</template></a-route>
-    <a-route path='*'><template>catach all - route not found</template></a-route>
+    <a-route path='*' redirect="/webcomponent">This route redirects to the Overview route.</a-route>
 </a-router>
         </div>
     </div>

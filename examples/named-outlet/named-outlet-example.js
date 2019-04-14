@@ -44,7 +44,7 @@ class NamedOutletExampleElement extends HTMLElement {
     <div class="eleven wide column">
         <code-example class="ui segment"></code-example>
         <div class="ui segment" code-example="Code to output links and outlet below">
-<div class="ui nine item menu">
+<div class="ui eight item menu">
     <a class="item" is="router-link" href="(main:content-overview)">Overview</a>
     <a class="item" is="router-link" href="(main:content-basic)">Basic Outlet Assignment</a>
     <!--<a class="item" is="router-link" href="(main:content-nested)">Nested Outlets</a>-->

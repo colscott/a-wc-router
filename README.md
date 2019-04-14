@@ -1,4 +1,4 @@
-# Routing Web Component
+# AWC Router
 ## Features
 - Web Component
 - Code spltting/lazy loading

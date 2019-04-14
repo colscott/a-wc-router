@@ -22,6 +22,9 @@ export class CommonStylesElement extends HTMLElement {
             <link rel="stylesheet" href="/routing-wc/examples/assets/styles/table.min.css">
             <link rel="stylesheet" href="/routing-wc/examples/assets/styles/header.min.css">
             <link rel="stylesheet" href="/routing-wc/examples/assets/styles/checkbox.min.css">
+            <style>
+                pre { overflow: auto; }
+            </style>
         `;
     }
 }

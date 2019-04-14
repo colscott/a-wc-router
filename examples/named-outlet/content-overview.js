@@ -17,9 +17,7 @@ class ContentOverviewElement extends ContentBasicElement {
             </p>
             <p>
                 Syntax: <br>
-                <div class="ui segment">
-                &lt;a href="({outlet-name}:{tag}[{(import-path)}]:[attr-name=attrValue&.prop-name=propValue...])" &gt;
-                </div>
+                <pre class="ui segment">&lt;a href="({outlet-name}:{tag}[{(import-path)}]:[attr-name=attrValue&.prop-name=propValue...])" &gt;</pre>
             </p>
             <table class="ui very basic collapsing celled table">
                 <thead>
