@@ -20,7 +20,7 @@ class End2EndElement extends HTMLElement {
 
     render() {
         this.innerHTML = `
-        <a href="/components/routing-wc/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
+        <a href="/components/a-wc-router/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
         <div id="mocha">
           <p><a href=".">Index</a></p>
         </div>
@@ -33,20 +33,20 @@ class End2EndElement extends HTMLElement {
           <an-outlet id="outletA"></an-outlet>
           <a-route path="/template" id="template-route"><template>Hello Template</template></a-route>
           <a-route path="/template"><template>Only hit if template route cancelled</template></a-route>
-          <a-route path="/webcomponent" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
           <a-route path="/nested">
             <template>
               <p>Content with nested router</p>
               <a-router name="router-a-b">
                 <an-outlet id="outletB"></an-outlet>
                 <a-route path="/template_nested"><template>Hello Nested</template></a-route>
-                <a-route path="/webcomponent_nested" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
+                <a-route path="/webcomponent_nested" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
                 <a-route path="/nested2/:param1">
                   <template>
                     <p>Nested router with data</p>
                     <a-router>
                       <an-outlet id="outletC"></an-outlet>
-                      <a-route id="route-nested-component" path="/webcomponent-data2/:requiredParam" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
+                      <a-route id="route-nested-component" path="/webcomponent-data2/:requiredParam" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
                     </a-route>
                   </template>
                 </a-route>
@@ -54,11 +54,11 @@ class End2EndElement extends HTMLElement {
               </a-route>
             </template>
           </a-route>
-          <a-route path="/webcomponent-data1/:requiredParam" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data2/:optionalParam?" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data3/:atLeastOneParam+" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data4/:anyNumOfParam*" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data5/:firstParam/:secondParam" import='/components/routing-wc/src/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data1/:requiredParam" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data2/:optionalParam?" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data3/:atLeastOneParam+" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data4/:anyNumOfParam*" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data5/:firstParam/:secondParam" import='/components/a-wc-router/src/test-dummy.js' element="test-dummy"></a-route>
           <a-route id="catch-all" path='*'><template>catach all - NotFound2</template></a-route>
         </a-router>
       
@@ -191,10 +191,10 @@ class End2EndElement extends HTMLElement {
         it('link should be active for named outlet', function(done){
             let link1 = document.createElement('a');
             document.body.appendChild(link1);
-            link1.href = '(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js))';
+            link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))';
             let link2 = document.createElement('a');
             document.body.appendChild(link2);
-            link2.href = '(myoutlet:tests-dummy(/components/routing-wc/src/test-dummy.js))';
+            link2.href = '(myoutlet:tests-dummy(/components/a-wc-router/src/test-dummy.js))';
             RouterElement.registerLinks([link1, link2], 'active');
 
             let outletUpdateCallback = function (event) {
@@ -208,19 +208,19 @@ class End2EndElement extends HTMLElement {
             };
             window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
 
-            click({ href: "(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js))" });
+            click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))" });
         });
 
         it('link should be active for named outlet with data', function(done){
             let link1 = document.createElement('a');
             document.body.appendChild(link1);
-            link1.href = '(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js):param1=value1)';
+            link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js):param1=value1)';
             let link2 = document.createElement('a');
             document.body.appendChild(link2);
-            link2.href = '(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js)):param1=value2';
+            link2.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js)):param1=value2';
             let link3 = document.createElement('a');
             document.body.appendChild(link3);
-            link3.href = '(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js))';
+            link3.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))';
             RouterElement.registerLinks([link1, link2, link3], 'active');
 
             let outletUpdateCallback = function (event) {
@@ -236,7 +236,7 @@ class End2EndElement extends HTMLElement {
             };
             window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
 
-            click({ href: "(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js):param1=value1)" });
+            click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js):param1=value1)" });
         });
 
         it('link should be active for named routes', function(done){
@@ -268,15 +268,15 @@ class End2EndElement extends HTMLElement {
                     done();
                 };
                 document.body.addEventListener("onOutletUpdated", outletUpdateCallback);
-                click({ href: '(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js))'});
+                click({ href: '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))'});
             });
 
             it('updates for clicked links', function(done) {
-                clickAndTest({ href: "(myoutlet1:test-dummy(/components/routing-wc/src/test-dummy.js):requiredParam=named outlet,testing)" }, 'Test Element named outlet,testing', done, 'myoutlet1');
+                clickAndTest({ href: "(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js):requiredParam=named outlet,testing)" }, 'Test Element named outlet,testing', done, 'myoutlet1');
             });
 
             it('should support convention based importing', function(done) {
-                clickAndTest({ href: "(myoutlet1:/components/routing-wc/src/test-dummy-two)" }, 'Test Element Two', done, 'myoutlet1');
+                clickAndTest({ href: "(myoutlet1:/components/a-wc-router/src/test-dummy-two)" }, 'Test Element Two', done, 'myoutlet1');
             });
         });
 
@@ -334,7 +334,7 @@ class End2EndElement extends HTMLElement {
             });
 
             it('absolute path should match', function (done) {
-            clickAndTest({ href: "/components/routing-wc/test/unit/template" }, 'Hello Template', done);
+            clickAndTest({ href: "/components/a-wc-router/test/unit/template" }, 'Hello Template', done);
             });
         });
 

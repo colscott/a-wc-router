@@ -245,10 +245,24 @@ export class NamedRouting {
    */
   static prefetchNamedOutletImports(namedAssignment) {
     if (namedAssignment.namedOutlet && namedAssignment.namedOutlet.options && namedAssignment.namedOutlet.options.import) {
-      NamedRouting.pageReady().then(() => NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import));
+      NamedRouting.pageReady().then(() => NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import, namedAssignment.namedOutlet.elementTag));
     }
   }
 
+  /**
+   * Imports a script for a customer element once the page has loaded
+   * @param {string} importSrc 
+   * @param {string} tagName 
+   */
+  static prefetchImport(importSrc, tagName) {
+    NamedRouting.pageReady().then(() => NamedRouting.importCustomElement(importSrc, tagName));
+  }
+
+  /**
+   * Imports a script for a customer element
+   * @param {string} importSrc 
+   * @param {string} tagName 
+   */
   static async importCustomElement(importSrc, tagName) {
     if (importSrc && customElements.get(tagName) === undefined) {
       await import(importSrc);

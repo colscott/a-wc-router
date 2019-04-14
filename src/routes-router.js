@@ -270,7 +270,7 @@ export class RouterElement extends HTMLElement {
     }
 
     /**
-     * Event that fires if a link is not handled due to it not being same origin or base url.
+     * Event that fires when HTMLAnchorElement active statuses are being updated as part of a routing.
      * @event RouterElement#onRouteCancelled
      * @type CustomEvent
      * @property {Object} details - The event details

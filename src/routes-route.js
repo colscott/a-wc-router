@@ -25,14 +25,12 @@ export class RouteElement extends HTMLElement {
       if (this.hasAttribute('lazyload') && this.getAttribute('lazyload').toLowerCase() !== 'true') {
         let importAttr = this.getAttribute('import');
         let tagName = this.getAttribute('element');
-        if (importAttr && customElements.get(tagName) === undefined) {
-            import(importAttr);
-        }
+        NamedRouting.prefetchImport(importAttr, tagName);
       }
     }
   }
 
-  disconnectedCallback(){
+  disconnectedCallback() {
     this.parentNode && this.parentNode.isConnected && this.parentNode.removeRoute(this);
   }
 
@@ -187,12 +185,14 @@ export class RouteElement extends HTMLElement {
       }
 
       let template = this.children[0];
-      if (template && template.nodeName === 'TEMPLATE') {
+      if (template && template instanceof HTMLTemplateElement) {
         return template.content.cloneNode(true);
       }
     }
 
-    RouteElement.setData(content, attributes);
+    if (attributes) {
+      RouteElement.setData(content, attributes);
+    }
 
     return this.content = content;
   }

@@ -41,7 +41,15 @@ let dotIndex=inferredTagName.indexOf(".");if(-1<dotIndex){inferredTagName=inferr
 inferredTagName=inferredTagName.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase();return inferredTagName}/**
      * Prefetches an import module so that it is available when the link is activated
      * @param {NamedMatch} namedAssignment item assignment
-     */static prefetchNamedOutletImports(namedAssignment){if(namedAssignment.namedOutlet&&namedAssignment.namedOutlet.options&&namedAssignment.namedOutlet.options.import){NamedRouting.pageReady().then(()=>NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import))}}static async importCustomElement(importSrc,tagName){if(importSrc&&customElements.get(tagName)===void 0){await import(importSrc)}}/**
+     */static prefetchNamedOutletImports(namedAssignment){if(namedAssignment.namedOutlet&&namedAssignment.namedOutlet.options&&namedAssignment.namedOutlet.options.import){NamedRouting.pageReady().then(()=>NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import,namedAssignment.namedOutlet.elementTag))}}/**
+     * Imports a script for a customer element once the page has loaded
+     * @param {string} importSrc 
+     * @param {string} tagName 
+     */static prefetchImport(importSrc,tagName){NamedRouting.pageReady().then(()=>NamedRouting.importCustomElement(importSrc,tagName))}/**
+     * Imports a script for a customer element
+     * @param {string} importSrc 
+     * @param {string} tagName 
+     */static async importCustomElement(importSrc,tagName){if(importSrc&&customElements.get(tagName)===void 0){await import(importSrc)}}/**
      * 
      */static pageReady(){if(!NamedRouting.pageReadyPromise){NamedRouting.pageReadyPromise="complete"===document.readyState?Promise.resolve():new Promise((resolve,reject)=>{let callback=()=>{if("complete"===document.readyState){document.removeEventListener("readystatechange",callback);resolve()}};document.addEventListener("readystatechange",callback)})}return NamedRouting.pageReadyPromise}/**
      * Called just before leaving for another route.
@@ -111,7 +119,7 @@ if(0===urlFragNamedItemMatch.urlEscaped.indexOf(named[k].url)){// full match on 
 link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}}}}for(let k=0,kLen=routes.length;k<kLen;k++){if(urlFragment==routes[k]){// full match on route
 link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}else if(0===routes[k].indexOf(urlFragment)){// partial match on route
 link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}}}}}}/**
-       * Event that fires if a link is not handled due to it not being same origin or base url.
+       * Event that fires when HTMLAnchorElement active statuses are being updated as part of a routing.
        * @event RouterElement#onRouteCancelled
        * @type CustomEvent
        * @property {Object} details - The event details
@@ -225,7 +233,7 @@ class RouteElement extends HTMLElement{connectedCallback(){if(!this.created){thi
 // };
 // var observer = new MutationObserver(childrenReady);
 // observer.observe(this, { attributes: false, childList: true, subtree: true });
-var initMatch=function(){this.parentNode&&this.parentNode.addRoute&&this.parentNode.addRoute(this)};setTimeout(initMatch.bind(this),0);if(this.hasAttribute("lazyload")&&"true"!==this.getAttribute("lazyload").toLowerCase()){let importAttr=this.getAttribute("import"),tagName=this.getAttribute("element");if(importAttr&&customElements.get(tagName)===void 0){import(importAttr)}}}}disconnectedCallback(){this.parentNode&&this.parentNode.isConnected&&this.parentNode.removeRoute(this)}constructor(){super();this.canLeave=NamedRouting.canLeave.bind(this)}_createPathSegments(url){return url.replace(/(^\/+|\/+$)/g,"").split("/")}/**
+var initMatch=function(){this.parentNode&&this.parentNode.addRoute&&this.parentNode.addRoute(this)};setTimeout(initMatch.bind(this),0);if(this.hasAttribute("lazyload")&&"true"!==this.getAttribute("lazyload").toLowerCase()){let importAttr=this.getAttribute("import"),tagName=this.getAttribute("element");NamedRouting.prefetchImport(importAttr,tagName)}}}disconnectedCallback(){this.parentNode&&this.parentNode.isConnected&&this.parentNode.removeRoute(this)}constructor(){super();this.canLeave=NamedRouting.canLeave.bind(this)}_createPathSegments(url){return url.replace(/(^\/+|\/+$)/g,"").split("/")}/**
      * @typedef {Object} Match
      * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
      * @property {string} remainder - If the route performed a partial match, the remainder of the URL that was not atched is stored in this property.
@@ -250,7 +258,7 @@ let max=Math.max(urlSegments.length,pathSegments.length),ret;for(let i=0;i<max;i
      * @returns {Promise<string>|Promise<DocumentFragment>|Promise<HTMLElement>} - The resulting generated content.
      */async getContent(attributes={}){let content=this.content;if(!content){let importAttr=this.getAttribute("import"),tagName=this.getAttribute("element");await NamedRouting.importCustomElement(importAttr,tagName);if(tagName){// TODO support if tagName is a function that is called and will return the content
 // content = tagName(attributes);
-content=document.createElement(tagName)}let template=this.children[0];if(template&&"TEMPLATE"===template.nodeName){return template.content.cloneNode(!0)}}RouteElement.setData(content,attributes);return this.content=content}static setData(target,data){data.forEach((v,k)=>{if("."===k[0]){target[k.substr(1)]=v}else{target.setAttribute(k,v)}})}}window.customElements.define("a-route",RouteElement);var routesRoute={RouteElement:RouteElement};///@ts-check
+content=document.createElement(tagName)}let template=this.children[0];if(template&&template instanceof HTMLTemplateElement){return template.content.cloneNode(!0)}}if(attributes){RouteElement.setData(content,attributes)}return this.content=content}static setData(target,data){data.forEach((v,k)=>{if("."===k[0]){target[k.substr(1)]=v}else{target.setAttribute(k,v)}})}}window.customElements.define("a-route",RouteElement);var routesRoute={RouteElement:RouteElement};///@ts-check
 class OutletElement extends HTMLElement{connectedCallback(){if(this.isConnected){if(!this.created){this.created=!0;// var p = document.createElement('p');
 // p.textContent = 'Please add your routes!';
 // this.appendChild(p);
