@@ -6,6 +6,7 @@ import './../shared/main-menu.js';
 import './../shared/code-example.js';
 
 import './content-overview.js';
+import './content-nested.js';
 
 class RouterExampleElement extends HTMLElement {
     
@@ -30,11 +31,12 @@ class RouterExampleElement extends HTMLElement {
     <div class="eleven wide column">
         <code-example class="ui segment"></code-example>
         <div class="ui segment" code-example="Code to output links and outlet below">
-<div class="ui one item menu">
-    <a  class="item" is="router-link" href="webcomponent">Overiew</a>
+<div class="ui two item menu">
+    <a  class="item" is="router-link" href="/routing-wc/examples/router/webcomponent">Overiew</a>
+    <a  class="item" is="router-link" href="/routing-wc/examples/router/nested">Nested routers</a>
 </div>
 <a-router  style="display: block;">
-    <an-outlet>Please click a link above.</an-outlet>
+    <an-outlet>This content never shows because of the last catch all route</an-outlet>
     <a-route path="/webcomponent" element="content-overview"></a-route>
     <a-route path="/webcomponent/import" import='/components/routing-wc/src/test-dummy.js' element="content-web-component-import"></a-route>
     <a-route path="/nested" element="content-nested"></a-route>
