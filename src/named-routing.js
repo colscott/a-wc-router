@@ -174,6 +174,10 @@ export class NamedRouting {
       let importPath = match[2] && match[2].substr(1, match[2].length - 2);
 
       let inferredElementTag = NamedRouting.inferCustomElementTagName(elementTag);
+      if (inferredElementTag === null) {
+        return null;
+      }
+
       if (!importPath) {
         importPath = NamedRouting.inferCustomElementImportPath(elementTag, inferredElementTag);
       }
@@ -235,6 +239,10 @@ export class NamedRouting {
 
     // to kebab case
     inferredTagName = inferredTagName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+    if (inferredTagName.indexOf('-') === -1) {
+      inferredTagName = null;
+    }
 
     return inferredTagName;
   }
