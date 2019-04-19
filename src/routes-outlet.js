@@ -86,6 +86,10 @@ export class OutletElement extends HTMLElement {
     let element = document.createElement(details.elementTag);
     RouteElement.setData(element, data || {});
 
+    if (customElements.get(details.elementTag) === undefined) {
+      console.error(`Custom Element not found ${details.elementTag}. Are you missing an import?`);
+    }
+
     this.renderOutletContent(element);
 
     if (!supressUrlGeneration) {

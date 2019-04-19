@@ -186,6 +186,9 @@ export class RouteElement extends HTMLElement {
         // TODO support if tagName is a function that is called and will return the content
         // content = tagName(attributes);
         content = document.createElement(tagName);
+        if (customElements.get(tagName) === undefined) {
+          console.error(`Custom Element not found: ${details.elementTag}. Are you missing an import or mis-spelled tag name?`);
+        }
       }
 
       let template = this.children[0];
