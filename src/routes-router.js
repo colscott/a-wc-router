@@ -257,7 +257,7 @@ export class RouterElement extends HTMLElement {
                 link.a.classList.add(link.a.activeClassName || 'active');
                 link = null;
                 continue nextLink;
-              } else if (routes[k].indexOf(urlFragment) === 0) {
+              } else if (urlFragment.indexOf(routes[k]) === 0) {
                 // partial match on route
                 link.a.classList.add(link.a.activeClassName || 'active');
                 link = null;
@@ -594,14 +594,21 @@ export class RouterElement extends HTMLElement {
     let routeElements = this.getRouteElements();
     let outletElement = this.getOutletElement();
     let match = null;
-
-    for(let i = 0, iLen = routeElements.length; i < iLen; i++) {
+    let i = 0;
+    let iLen = routeElements.length;
+    for(; i < iLen; i++) {
       let routeElement = routeElements[i];
-      match = this.performMatchOnRoute(url, routeElement)
+      match = this.performMatchOnRoute(url, routeElement);
       if (match != null) {
         console.log('route matched -> ', routeElement.getAttribute('path'));
         break;
-      }      
+      }
+    }
+
+    // clear cache of remaining routes
+    for(; i < iLen; i++) {
+      let routeElement = routeElements[i];
+      routeElement.clearLastMatch();
     }
 
     if (match === null) {
@@ -638,6 +645,9 @@ export class RouterElement extends HTMLElement {
         }
       } else {
         let outletElement = this.getOutletElement();
+        /**
+         * @param {string | HTMLElement | DocumentFragment} content
+         */
         routeElement.getContent(match.data)
           .then((content) => outletElement.renderOutletContent(content));
       }

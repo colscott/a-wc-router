@@ -164,6 +164,10 @@ export class RouteElement extends HTMLElement {
     return match;
   }
 
+  clearLastMatch() {
+    this.lastMatch = null;
+  }
+
   /**
    * Generates content for this route.
    * @param {Object} attributes - Object of properties that will be applied to the content. Only applies if the content was not generated form a Template.
