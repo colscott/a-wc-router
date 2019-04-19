@@ -100,7 +100,7 @@ Named outlet example:
     <an-outlet name="account-details">Please select an account</an-outlet>
 
     // Define the link anywhere in the application
-    <a class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
+    <a class="item" href="/(account-details:wc-account-details/${account.number})">
 
     // Register the link somewhere (could be after you generate the link itself)
     RouterElement.registerLinks(this.querySelectorAll('a'));
@@ -113,7 +113,7 @@ Named outlet example:
                     links: this.querySelectorAll('a') }}));
 
     // Or register your link by giving the link "router-link" behavior
-    <a is="router-link" class="item" href="/(account-details:wc-account-details/accountNumber=${account.number})">
+    <a is="router-link" class="item" href="/(account-details:wc-account-details/${account.number})">
 
 Normal routes and named routes are handled the same way.
 
@@ -121,14 +121,14 @@ Normal routes and named routes are handled the same way.
 As well as using links to navigate, you can also navigate using code:
 
     RouterElement.navigate('myUrl');
-    RouterElement.navigate('/(account-details:wc-account-details/accountNumber=${account.number})');
+    RouterElement.navigate('/(account-details:wc-account-details/${account.number})');
 
     // Or via an event for a more decoupled approach
     window.dispatchEvent(
         new CustomEvent(
             'navigate', {
                 detail: {
-                    href: '/(account-details:wc-account-details/accountNumber=${account.number})' }}));
+                    href: '/(account-details:wc-account-details/${account.number})' }}));
 ## Base URL
 Routing only takes place if a url also matches the document.baseURI.
 The document.baseURI is commonly used in Single Page Application frameworks to distiguish between a url that is meant for the client app and a url that is meant to be sent to the server, like a REST API call.
