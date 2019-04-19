@@ -87,7 +87,7 @@ export class OutletElement extends HTMLElement {
     RouteElement.setData(element, data || {});
 
     if (customElements.get(details.elementTag) === undefined) {
-      console.error(`Custom Element not found ${details.elementTag}. Are you missing an import?`);
+      console.error(`Custom Element not found: ${details.elementTag}. Are you missing an import or mis-spelled tag name?`);
     }
 
     this.renderOutletContent(element);
