@@ -187,7 +187,7 @@ export class RouteElement extends HTMLElement {
         // content = tagName(attributes);
         content = document.createElement(tagName);
         if (customElements.get(tagName) === undefined) {
-          console.error(`Custom Element not found: ${details.elementTag}. Are you missing an import or mis-spelled tag name?`);
+          console.error(`Custom Element not found: ${tagName}. Are you missing an import or mis-spelled tag name?`);
         }
       }
 
