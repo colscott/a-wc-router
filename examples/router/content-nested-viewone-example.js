@@ -6,7 +6,7 @@ class ContenNestedViewoneExample extends HTMLElement {
                 <h2>Nested View One</h2>
                 Example of a nested routing. The full URL most be supplied that includes any parent routes.<br>
                 In this case:<br>
-                Bae URL -> /routing-wc/examples/router/
+                Base URL -> /routing-wc/examples/router/
                 Parent route -> /nested<br>
                 Child route -> /viewone<br>
                 So the link was -> /routing-wc/examples/router/nested/viewone

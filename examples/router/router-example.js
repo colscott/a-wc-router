@@ -7,6 +7,8 @@ import './../shared/code-example.js';
 
 import './content-overview.js';
 import './content-nested.js';
+import './content-named.js';
+import './content-guards.js'
 
 class RouterExampleElement extends HTMLElement {
     
@@ -31,15 +33,21 @@ class RouterExampleElement extends HTMLElement {
     <div class="eleven wide column">
         <code-example class="ui segment"></code-example>
         <div class="ui segment" code-example="Code to output links and outlet below">
-<div class="ui two item menu">
+<div class="ui four item menu">
     <a  class="item" is="router-link" href="/routing-wc/examples/router/webcomponent">Overiew</a>
     <a  class="item" is="router-link" href="/routing-wc/examples/router/nested">Nested routers</a>
+    <a  class="item" is="router-link" href="/routing-wc/examples/router/named">Named routers</a>
+    <a  class="item" is="router-link" href="/routing-wc/examples/router/guards">Guards</a>
 </div>
 <a-router  style="display: block;">
+    <!-- Outlet definition is first -->
     <an-outlet>This content never shows because of the last catch all route</an-outlet>
+    <!-- Route definitions are next. There are a variety of examples below.  -->
     <a-route path="/webcomponent" element="content-overview"></a-route>
     <a-route path="/webcomponent/import" import='/components/routing-wc/src/test-dummy.js' element="content-web-component-import"></a-route>
     <a-route path="/nested" element="content-nested"></a-route>
+    <a-route path="/named" element="content-named"></a-route>
+    <a-route path="/guards" element="content-guards"></a-route>
     <a-route path="/content/import/webcomponent/data1/:requiredParam" element="content-params"></a-route>
     <a-route path="/webcomponent-data2/:optionalParam?"  element="content-params"></a-route>
     <a-route path="/webcomponent-data3/:atLeastOneParam+"  element="content-params"></a-route>
