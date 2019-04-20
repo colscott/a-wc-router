@@ -170,93 +170,106 @@ class End2EndElement extends HTMLElement {
         };
 
         describe('link state', function() {
-        it('link should be active for routes', function(done){
-            let link1 = document.createElement('a');
-            document.body.appendChild(link1);
-            link1.href = 'nested/webcomponent_nested';
-            let link2 = document.createElement('a');
-            document.body.appendChild(link2);
-            link2.href = 'nested2/webcomponent_nested';
-            RouterElement.registerLinks([link1, link2], 'active');
-            link1.click();
-            clickAndTest({ href: "nested/webcomponent_nested" }, 'Test Element', () => {
-                expect(link1.className).to.equal('active');
-                expect(link2.className).to.equal('');
-                link1.remove();
-                link2.remove();
-                done();
-            }, 'outletB');
-        });
+            it('link should be active for routes', function(done){
+                let link1 = document.createElement('a');
+                document.body.appendChild(link1);
+                link1.href = 'nested/webcomponent_nested';
+                let link2 = document.createElement('a');
+                document.body.appendChild(link2);
+                link2.href = 'nested2/webcomponent_nested';
+                RouterElement.registerLinks([link1, link2], 'active');
+                
+                let handler = () => {
+                    console.log('test: ', document.querySelector('.active'));
+                    expect(link1.className).to.equal('active');
+                    expect(link2.className).to.equal('');
+                    link1.remove();
+                    link2.remove();
+                    done();
 
-        it('link should be active for named outlet', function(done){
-            let link1 = document.createElement('a');
-            document.body.appendChild(link1);
-            link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))';
-            let link2 = document.createElement('a');
-            document.body.appendChild(link2);
-            link2.href = '(myoutlet:tests-dummy(/components/a-wc-router/src/test-dummy.js))';
-            RouterElement.registerLinks([link1, link2], 'active');
+                    window.removeEventListener("onLinkActiveStatusUpdated", handler);
+                }
 
-            let outletUpdateCallback = function (event) {
-                window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
-                setTimeout(() => NamedRouting.removeAssignment('myoutlet1'), 0);
-                expect(link1.className).to.equal('active');
-                expect(link2.className).to.equal('');
-                link1.remove();
-                link2.remove();
-                done();
-            };
-            window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+                window.addEventListener("onLinkActiveStatusUpdated", handler);
 
-            click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))" });
-        });
+                link1.click();
+            });
 
-        it('link should be active for named outlet with data', function(done){
-            let link1 = document.createElement('a');
-            document.body.appendChild(link1);
-            link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js):param1=value1)';
-            let link2 = document.createElement('a');
-            document.body.appendChild(link2);
-            link2.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js)):param1=value2';
-            let link3 = document.createElement('a');
-            document.body.appendChild(link3);
-            link3.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))';
-            RouterElement.registerLinks([link1, link2, link3], 'active');
+            it('link should be active for named outlet', function(done){
+                let link1 = document.createElement('a');
+                document.body.appendChild(link1);
+                link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))';
+                let link2 = document.createElement('a');
+                document.body.appendChild(link2);
+                link2.href = '(myoutlet:tests-dummy(/components/a-wc-router/src/test-dummy.js))';
+                RouterElement.registerLinks([link1, link2], 'active');
 
-            let outletUpdateCallback = function (event) {
-                window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
-                setTimeout(() => NamedRouting.removeAssignment('myoutlet1'), 0);
-                expect(link1.className).to.equal('active');
-                expect(link2.className).to.equal('');
-                expect(link3.className).to.equal('active');
-                link1.remove();
-                link2.remove();
-                link3.remove();
-                done();
-            };
-            window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+                let outletUpdateCallback = function (event) {
+                    setTimeout(() => {
+                        window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+                        setTimeout(() => NamedRouting.removeAssignment('myoutlet1'), 0);
+                        expect(link1.className).to.equal('active');
+                        expect(link2.className).to.equal('');
+                        link1.remove();
+                        link2.remove();
+                        done();
+                    }, 0);
+                };
+                window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
 
-            click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js):param1=value1)" });
-        });
+                click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))" });
+            });
 
-        it('link should be active for named routes', function(done){
-            let link1 = document.createElement('a');
-            document.body.appendChild(link1);
-            link1.href = '(router-a-b:template2_nested)';
-            let link2 = document.createElement('a');
-            document.body.appendChild(link2);
-            link2.href = '(router-a-b:template_nested)';
-            RouterElement.registerLinks([link1, link2], 'active');
-            click({ href: "nested/webcomponent_nested" });
-            clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', () => {
-            setTimeout(() => NamedRouting.removeAssignment('router-a-b'), 0);
-            expect(link1.className).to.equal('');
-            expect(link2.className).to.equal('active');
-            link1.remove();
-            link2.remove();
-            done();
-            }, 'outletB');
-        });
+            it('link should be active for named outlet with data', function(done){
+                let link1 = document.createElement('a');
+                document.body.appendChild(link1);
+                link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js):param1=value1)';
+                let link2 = document.createElement('a');
+                document.body.appendChild(link2);
+                link2.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js)):param1=value2';
+                let link3 = document.createElement('a');
+                document.body.appendChild(link3);
+                link3.href = '(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js))';
+                RouterElement.registerLinks([link1, link2, link3], 'active');
+
+                let outletUpdateCallback = function (event) {
+                    window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+                    setTimeout(() => {
+                        setTimeout(() => NamedRouting.removeAssignment('myoutlet1'), 0);
+                        expect(link1.className).to.equal('active');
+                        expect(link2.className).to.equal('');
+                        expect(link3.className).to.equal('active');
+                        link1.remove();
+                        link2.remove();
+                        link3.remove();
+                        done();
+                    },0);
+                };
+                window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+
+                click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/src/test-dummy.js):param1=value1)" });
+            });
+
+            it('link should be active for named routes', function(done){
+                let link1 = document.createElement('a');
+                document.body.appendChild(link1);
+                link1.href = '(router-a-b:template2_nested)';
+                let link2 = document.createElement('a');
+                document.body.appendChild(link2);
+                link2.href = '(router-a-b:template_nested)';
+                RouterElement.registerLinks([link1, link2], 'active');
+                click({ href: "nested/webcomponent_nested" });
+                clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', () => {
+                    setTimeout(() => {
+                        setTimeout(() => NamedRouting.removeAssignment('router-a-b'), 0);
+                        expect(link1.className).to.equal('');
+                        expect(link2.className).to.equal('active');
+                        link1.remove();
+                        link2.remove();
+                        done();
+                    }, 0);
+                }, 'outletB');
+            });
         });
 
         describe('named outlets', function() {
@@ -283,10 +296,12 @@ class End2EndElement extends HTMLElement {
         describe('named routers', function() {
             it('updates for clicked links', function(done) {
                 click({ href: "nested/webcomponent_nested" });
-                clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', () => {
-                setTimeout(() => NamedRouting.removeAssignment('router-a-b'), 0);
-                done();
-                }, 'outletB');
+                setTimeout(() => {
+                    clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', () => {
+                        setTimeout(() => NamedRouting.removeAssignment('router-a-b'), 0);
+                        done();
+                    }, 'outletB')
+                }, 0);
             });
         });
 

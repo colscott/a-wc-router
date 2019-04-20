@@ -63,7 +63,7 @@ export class OutletElement extends HTMLElement {
   /**
    * Takes in a url that contains named outlet data and renders the outlet using the information
    * @param {string} url
-   * @param {boolean} supressUrlGeneration
+   * @param {Promise<boolean>} supressUrlGeneration
    */
   async processNamedUrl(url, supressUrlGeneration) {
     let details = NamedRouting.parseNamedOutletUrl(url);

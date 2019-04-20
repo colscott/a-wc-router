@@ -601,6 +601,7 @@ export class RouterElement extends HTMLElement {
       match = this.performMatchOnRoute(url, routeElement);
       if (match != null) {
         console.log('route matched -> ', routeElement.getAttribute('path'));
+        i++;
         break;
       }
     }
@@ -694,16 +695,17 @@ export class RouterElement extends HTMLElement {
       urlFrag += '/' + match.remainder;
     }
 
-    if (this._routers && this._routers.length) {
-      urlFrag += '/(';
-      for (let i = 0, iLen = this._routers.length; i < iLen; i++) {
-        if (i > 0) {
-          urlFrag += '::';
-        }
-        urlFrag += this._routers[i].generateUrlFragment();
-      }
-      urlFrag += ')';
-    }
+    // TODO test if this is required. It might be duplicating routes.
+    // if (this._routers && this._routers.length) {
+    //   urlFrag += '/(';
+    //   for (let i = 0, iLen = this._routers.length; i < iLen; i++) {
+    //     if (i > 0) {
+    //       urlFrag += '::';
+    //     }
+    //     urlFrag += this._routers[i].generateUrlFragment();
+    //   }
+    //   urlFrag += ')';
+    // }
 
     return urlFrag;
   }

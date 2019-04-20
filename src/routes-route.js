@@ -49,6 +49,8 @@ export class RouteElement extends HTMLElement {
    * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
    * @property {string} remainder - If the route performed a partial match, the remainder of the URL that was not atched is stored in this property.
    * @property {Object} data - Any data found and matched in the URL.
+   * @property {string} redirect - A URL to redirect to.
+   * @property {boolean} useCache - Indicator as to wether the current HTML content can be reused.
    */
 
   /**
@@ -72,13 +74,17 @@ export class RouteElement extends HTMLElement {
       match =  {
         url: url,
         remainder: '',
-        data: null
+        data: null,
+        redirect: null,
+        useCache: false
       };
     } else if (path === url) {
       match = {
         url: url,
         remainder: '',
-        data: null
+        data: null,
+        redirect: null,
+        useCache: false
       };
     } else {
       const pathSegments = this._createPathSegments(path);
@@ -124,7 +130,9 @@ export class RouteElement extends HTMLElement {
           match = {
             url: url,
             remainder: '',
-            data: data
+            data: data,
+            redirect: null,
+            useCache: false
           }
         }
       }
@@ -171,7 +179,7 @@ export class RouteElement extends HTMLElement {
   /**
    * Generates content for this route.
    * @param {Object} attributes - Object of properties that will be applied to the content. Only applies if the content was not generated form a Template.
-   * @returns {Promise<string>|Promise<DocumentFragment>|Promise<HTMLElement>} - The resulting generated content.
+   * @returns {Promise<string|DocumentFragment|Node>} - The resulting generated content.
    */
   async getContent(attributes = {}) {
     let content = this.content;
