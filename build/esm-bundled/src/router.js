@@ -27,7 +27,7 @@ let urlEscaped=match[2].replace(/_dot_/g,"."),routeCancelled=!1;if(!0!==supressA
      * Takes a url for a named outlet assignment and parses
      * @param {string} url
      * @returns {ParseNamedOutletAsignment|null} null is returned if the url could not be parsed into a named outlet assignment
-     */static parseNamedOutletUrl(url){let match=url.match(/^([/\w-]+)(\(.*?\))?(?:\:(.+))?/);if(match){var data=new Map;if(match[3]){for(var keyValues=match[3].split("&"),i=0,iLen=keyValues.length;i<iLen;i++){let keyValue=keyValues[i].split("=");data.set(decodeURIComponent(keyValue[0]),decodeURIComponent(keyValue[1]))}}let elementTag=match[1],importPath=match[2]&&match[2].substr(1,match[2].length-2),inferredElementTag=NamedRouting.inferCustomElementTagName(elementTag);if(!importPath){importPath=NamedRouting.inferCustomElementImportPath(elementTag,inferredElementTag)}let options={import:importPath};return{elementTag:inferredElementTag,data,options}}return null}/**
+     */static parseNamedOutletUrl(url){let match=url.match(/^([/\w-]+)(\(.*?\))?(?:\:(.+))?/);if(match){var data=new Map;if(match[3]){for(var keyValues=match[3].split("&"),i=0,iLen=keyValues.length;i<iLen;i++){let keyValue=keyValues[i].split("=");data.set(decodeURIComponent(keyValue[0]),decodeURIComponent(keyValue[1]))}}let elementTag=match[1],importPath=match[2]&&match[2].substr(1,match[2].length-2),inferredElementTag=NamedRouting.inferCustomElementTagName(elementTag);if(null===inferredElementTag){return null}if(!importPath){importPath=NamedRouting.inferCustomElementImportPath(elementTag,inferredElementTag)}let options={import:importPath};return{elementTag:inferredElementTag,data,options}}return null}/**
      * @param {string} importStyleTagName
      * @param {string} elementTag
      * @returns {string} the custom element import path infered from the import style string
@@ -38,7 +38,7 @@ return void 0}let inferredPath=importStyleTagName,lastForwardSlash=inferredPath.
      */static inferCustomElementTagName(elementTag){let inferredTagName=elementTag,lastForwardSlash=inferredTagName.lastIndexOf("/");// get class name from path
 if(-1<lastForwardSlash){inferredTagName=inferredTagName.substring(lastForwardSlash+1)}// get class name from file name
 let dotIndex=inferredTagName.indexOf(".");if(-1<dotIndex){inferredTagName=inferredTagName.substring(0,dotIndex-1)}// to kebab case
-inferredTagName=inferredTagName.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase();return inferredTagName}/**
+inferredTagName=inferredTagName.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase();if(-1===inferredTagName.indexOf("-")){inferredTagName=null}return inferredTagName}/**
      * Prefetches an import module so that it is available when the link is activated
      * @param {NamedMatch} namedAssignment item assignment
      */static prefetchNamedOutletImports(namedAssignment){if(namedAssignment.namedOutlet&&namedAssignment.namedOutlet.options&&namedAssignment.namedOutlet.options.import){NamedRouting.pageReady().then(()=>NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import,namedAssignment.namedOutlet.elementTag))}}/**
@@ -117,7 +117,7 @@ if(named[k].url==urlFragNamedItemMatch.urlEscaped){// full match on named item
 link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}else//Check if it's a mtch upto data portion of url
 if(0===urlFragNamedItemMatch.urlEscaped.indexOf(named[k].url)){// full match on named item
 link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}}}}for(let k=0,kLen=routes.length;k<kLen;k++){if(urlFragment==routes[k]){// full match on route
-link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}else if(0===routes[k].indexOf(urlFragment)){// partial match on route
+link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}else if(0===urlFragment.indexOf(routes[k])){// partial match on route
 link.a.classList.add(link.a.activeClassName||"active");link=null;continue nextLink}}}}}}/**
        * Event that fires when HTMLAnchorElement active statuses are being updated as part of a routing.
        * @event RouterElement#onRouteCancelled
@@ -180,14 +180,28 @@ let remainder=this._currentMatch.remainder;if(remainder&&"("===remainder[0]){rem
    */processNamedUrl(url){return this.performMatchOnRouter(url)}/**
      * Performs route matching by iterating through routes looking for matches
      * @param {String} url  
-     */performMatchOnRouter(url){this.hasMatch=!1;this._currentMatch={remainder:url};let routeElements=this.getRouteElements(),outletElement=this.getOutletElement(),match=null;for(let i=0,iLen=routeElements.length,routeElement;i<iLen;i++){routeElement=routeElements[i];match=this.performMatchOnRoute(url,routeElement);if(null!=match){console.log("route matched -> ",routeElement.getAttribute("path"));break}}if(null===match){if(outletElement.renderOutletContent){outletElement.renderOutletContent("No matching route for url "+url+" \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");console&&console.error&&console.error("404 - Route not found for url "+url)}return null}return match}performMatchOnRoute(url,routeElement){// RouteElement not connected yet
+     */performMatchOnRouter(url){this.hasMatch=!1;this._currentMatch={remainder:url};let routeElements=this.getRouteElements(),outletElement=this.getOutletElement(),match=null,i=0,iLen=routeElements.length;for(;i<iLen;i++){let routeElement=routeElements[i];match=this.performMatchOnRoute(url,routeElement);if(null!=match){console.log("route matched -> ",routeElement.getAttribute("path"));i++;break}}// clear cache of remaining routes
+for(;i<iLen;i++){let routeElement=routeElements[i];routeElement.clearLastMatch()}if(null===match){if(outletElement.renderOutletContent){outletElement.renderOutletContent("No matching route for url "+url+" \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");console&&console.error&&console.error("404 - Route not found for url "+url)}return null}return match}performMatchOnRoute(url,routeElement){// RouteElement not connected yet
 if(!routeElement.match){return null}let match=routeElement.match(url)||null;if(null!=match){if(match.redirect){// TODO If the route being redirected to comes after then it might not have loaded yet
 return this.performMatchOnRouter(match.redirect)}let activeRouters=RouterElement._activeRouters;activeRouters.push({route:routeElement,router:this,match:match});this._currentMatch=match;if(match.useCache){// Content is already loaded so addRoute will not get called. Start the matching for children manually.
-if(this._routers&&match.remainder){RouterElement.performMatchOnRouters(match.remainder,this._routers)}}else{let outletElement=this.getOutletElement();routeElement.getContent(match.data).then(content=>outletElement.renderOutletContent(content))}this.postProcessMatch()}return match}postProcessMatch(){this.hasMatch=!0;if(this._parentRouter._currentMatch){let parentMatch=this._parentRouter._currentMatch,remainder=parentMatch.remainder;// TODO get remainder from parent but ony take this routers url from it
+if(this._routers&&match.remainder){RouterElement.performMatchOnRouters(match.remainder,this._routers)}}else{let outletElement=this.getOutletElement();/**
+                                                      * @param {string | HTMLElement | DocumentFragment} content
+                                                      */routeElement.getContent(match.data).then(content=>outletElement.renderOutletContent(content))}this.postProcessMatch()}return match}postProcessMatch(){this.hasMatch=!0;if(this._parentRouter._currentMatch){let parentMatch=this._parentRouter._currentMatch,remainder=parentMatch.remainder;// TODO get remainder from parent but ony take this routers url from it
 // e.g. split :: and take the first put the rest back
 // TODO if we support adding a router name to the URL this is where we would check for it: (myRouter:users/main) --> target router named myRouter with url users/main
 if(remainder&&"("===remainder[0]){remainder=remainder.substring(1,remainder.length-2)}remainder=RouterElement.splitUrlIntoRouters(remainder);remainder.shift();// this._currentMatch.remainder = remainder.shift();
-if(1<remainder.length){this._parentRouter._currentMatch.remainder="("+remainder.join("::")+")"}else if(1===remainder.length){this._parentRouter._currentMatch.remainder=remainder[0]}else{this._parentRouter._currentMatch.remainder=""}}}generateUrlFragment(){let match=this._currentMatch;if(!match){return""}let urlFrag=match.url;if(match.remainder){urlFrag+="/"+match.remainder}if(this._routers&&this._routers.length){urlFrag+="/(";for(let i=0,iLen=this._routers.length;i<iLen;i++){if(0<i){urlFrag+="::"}urlFrag+=this._routers[i].generateUrlFragment()}urlFrag+=")"}return urlFrag}/**
+if(1<remainder.length){this._parentRouter._currentMatch.remainder="("+remainder.join("::")+")"}else if(1===remainder.length){this._parentRouter._currentMatch.remainder=remainder[0]}else{this._parentRouter._currentMatch.remainder=""}}}generateUrlFragment(){let match=this._currentMatch;if(!match){return""}let urlFrag=match.url;if(match.remainder){urlFrag+="/"+match.remainder}// TODO test if this is required. It might be duplicating routes.
+// if (this._routers && this._routers.length) {
+//   urlFrag += '/(';
+//   for (let i = 0, iLen = this._routers.length; i < iLen; i++) {
+//     if (i > 0) {
+//       urlFrag += '::';
+//     }
+//     urlFrag += this._routers[i].generateUrlFragment();
+//   }
+//   urlFrag += ')';
+// }
+return urlFrag}/**
      * @returns {import('./routes-outlet').OutletElement}
      */getOutletElement(){// @ts-ignore
 return this._getRouterElements("an-outlet")[0]}/**
@@ -238,13 +252,15 @@ var initMatch=function(){this.parentNode&&this.parentNode.addRoute&&this.parentN
      * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
      * @property {string} remainder - If the route performed a partial match, the remainder of the URL that was not atched is stored in this property.
      * @property {Object} data - Any data found and matched in the URL.
+     * @property {string} redirect - A URL to redirect to.
+     * @property {boolean} useCache - Indicator as to wether the current HTML content can be reused.
      */ /**
          * Performs matching and partial matching. In order to successfully match, a RouteElement elements path attribute must match from the start of the URL. A full match would completely match the URL. A partial match would return from the start.
          * @fires RouteElement#onROuteMatch
          * @param {string} url - The url to perform matching against
          * @returns {Match} match - The resulting match. Null will be returned if no match was made.
-         */match(url){const urlSegments=this._createPathSegments(url),path=this.getAttribute("path");if(!path){console.log("route must contain a path");throw"Route has no path defined. Add a path attribute to route"}let match=null;if("*"===path){match={url:url,remainder:"",data:null}}else if(path===url){match={url:url,remainder:"",data:null}}else{const pathSegments=this._createPathSegments(path),data=new Map;//console.log(urlSegments, pathSegments);
-let max=Math.max(urlSegments.length,pathSegments.length),ret;for(let i=0;i<max;i++){if(pathSegments[i]&&":"===pathSegments[i].charAt(0)){let param=pathSegments[i].replace(/(^\:|[+*?]+$)/g,""),flags=(pathSegments[i].match(/[+*?]+$/)||[])[0]||"",plus=~flags.indexOf("+"),star=~flags.indexOf("*"),val=urlSegments[i]||"";if(!val&&!star&&(0>flags.indexOf("?")||plus)){match=null;break}data.set(param,decodeURIComponent(val));if(plus||star){data.set(param,urlSegments.slice(i).map(decodeURIComponent).join("/"));match={url:url,remainder:"",data:data};break}}else if(pathSegments[i]!==urlSegments[i]){if(0<i&&!this.hasAttribute("fullmatch")){match={url:urlSegments.slice(0,i).join("/"),remainder:urlSegments.slice(i).join("/"),data:data}}break}if(i===max-1){match={url:url,remainder:"",data:data}}}}if(null!==match){/**
+         */match(url){const urlSegments=this._createPathSegments(url),path=this.getAttribute("path");if(!path){console.log("route must contain a path");throw"Route has no path defined. Add a path attribute to route"}let match=null;if("*"===path){match={url:url,remainder:"",data:null,redirect:null,useCache:!1}}else if(path===url){match={url:url,remainder:"",data:null,redirect:null,useCache:!1}}else{const pathSegments=this._createPathSegments(path),data=new Map;//console.log(urlSegments, pathSegments);
+let max=Math.max(urlSegments.length,pathSegments.length),ret;for(let i=0;i<max;i++){if(pathSegments[i]&&":"===pathSegments[i].charAt(0)){let param=pathSegments[i].replace(/(^\:|[+*?]+$)/g,""),flags=(pathSegments[i].match(/[+*?]+$/)||[])[0]||"",plus=~flags.indexOf("+"),star=~flags.indexOf("*"),val=urlSegments[i]||"";if(!val&&!star&&(0>flags.indexOf("?")||plus)){match=null;break}data.set(param,decodeURIComponent(val));if(plus||star){data.set(param,urlSegments.slice(i).map(decodeURIComponent).join("/"));match={url:url,remainder:"",data:data};break}}else if(pathSegments[i]!==urlSegments[i]){if(0<i&&!this.hasAttribute("fullmatch")){match={url:urlSegments.slice(0,i).join("/"),remainder:urlSegments.slice(i).join("/"),data:data}}break}if(i===max-1){match={url:url,remainder:"",data:data,redirect:null,useCache:!1}}}}if(null!==match){/**
        * Route Match event that fires after a route has performed successful matching. The event can be cancelled to prevent the match.
        * @event RouteElement#onRouteMatch
        * @type CustomEvent
@@ -252,13 +268,13 @@ let max=Math.max(urlSegments.length,pathSegments.length),ret;for(let i=0;i<max;i
        * @property {RouteElement} details.route - The RouteElement that performed the match.
        * @property {Match} details.match - The resulting match. Warning, modifications to the Match will take effect.
        * @property {string} details.path - The RouteElement path attribute value that was matched against.
-       */var routeMatchedEvent=new CustomEvent("onRouteMatch",{bubbles:!0,cancelable:!0,composed:!0,detail:{route:this,match:match,path:path}});this.dispatchEvent(routeMatchedEvent);if(routeMatchedEvent.defaultPrevented){match=null}if(this.hasAttribute("redirect")){match.redirect=this.getAttribute("redirect")}}if(match){let useCache=this.lastMatch&&this.lastMatch.url===match.url&&!this.hasAttribute("disableCache");match.useCache=useCache}this.lastMatch=match;return match}/**
+       */var routeMatchedEvent=new CustomEvent("onRouteMatch",{bubbles:!0,cancelable:!0,composed:!0,detail:{route:this,match:match,path:path}});this.dispatchEvent(routeMatchedEvent);if(routeMatchedEvent.defaultPrevented){match=null}if(this.hasAttribute("redirect")){match.redirect=this.getAttribute("redirect")}}if(match){let useCache=this.lastMatch&&this.lastMatch.url===match.url&&!this.hasAttribute("disableCache");match.useCache=useCache}this.lastMatch=match;return match}clearLastMatch(){this.lastMatch=null}/**
      * Generates content for this route.
      * @param {Object} attributes - Object of properties that will be applied to the content. Only applies if the content was not generated form a Template.
-     * @returns {Promise<string>|Promise<DocumentFragment>|Promise<HTMLElement>} - The resulting generated content.
+     * @returns {Promise<string|DocumentFragment|Node>} - The resulting generated content.
      */async getContent(attributes={}){let content=this.content;if(!content){let importAttr=this.getAttribute("import"),tagName=this.getAttribute("element");await NamedRouting.importCustomElement(importAttr,tagName);if(tagName){// TODO support if tagName is a function that is called and will return the content
 // content = tagName(attributes);
-content=document.createElement(tagName)}let template=this.children[0];if(template&&template instanceof HTMLTemplateElement){return template.content.cloneNode(!0)}}if(attributes){RouteElement.setData(content,attributes)}return this.content=content}static setData(target,data){data.forEach((v,k)=>{if("."===k[0]){target[k.substr(1)]=v}else{target.setAttribute(k,v)}})}}window.customElements.define("a-route",RouteElement);var routesRoute={RouteElement:RouteElement};///@ts-check
+content=document.createElement(tagName);if(customElements.get(tagName)===void 0){console.error(`Custom Element not found: ${tagName}. Are you missing an import or mis-spelled tag name?`)}}let template=this.children[0];if(template&&template instanceof HTMLTemplateElement){return template.content.cloneNode(!0)}}if(attributes){RouteElement.setData(content,attributes)}return this.content=content}static setData(target,data){data.forEach((v,k)=>{if("."===k[0]){target[k.substr(1)]=v}else{target.setAttribute(k,v)}})}}window.customElements.define("a-route",RouteElement);var routesRoute={RouteElement:RouteElement};///@ts-check
 class OutletElement extends HTMLElement{connectedCallback(){if(this.isConnected){if(!this.created){this.created=!0;// var p = document.createElement('p');
 // p.textContent = 'Please add your routes!';
 // this.appendChild(p);
@@ -270,9 +286,9 @@ NamedRouting.addNamedItem(this)}RouterElement.initialize()}}disconnectedCallback
 if("string"===typeof content){this.innerHTML=content}else{this.appendChild(content)}this.dispatchOuletUpdated()}/**
      * Takes in a url that contains named outlet data and renders the outlet using the information
      * @param {string} url
-     * @param {boolean} supressUrlGeneration
+     * @param {Promise<boolean>} supressUrlGeneration
      */async processNamedUrl(url,supressUrlGeneration){let details=NamedRouting.parseNamedOutletUrl(url),options=details.options||{import:null},data=details.data||new Map;if(!1===data instanceof Map){data=new Map(Object.entries(data||{}))}// If same tag name then just set the data
-if(this.children&&this.children[0]&&this.children[0].tagName.toLowerCase()==details.elementTag){RouteElement.setData(this.children[0],data||{});this.dispatchOuletUpdated();return this.children[0]}await NamedRouting.importCustomElement(options.import,details.elementTag);let element=document.createElement(details.elementTag);RouteElement.setData(element,data||{});this.renderOutletContent(element);if(!supressUrlGeneration){RouterElement.updateHistory("")}return element}dispatchOuletUpdated(){/**
+if(this.children&&this.children[0]&&this.children[0].tagName.toLowerCase()==details.elementTag){RouteElement.setData(this.children[0],data||{});this.dispatchOuletUpdated();return this.children[0]}await NamedRouting.importCustomElement(options.import,details.elementTag);let element=document.createElement(details.elementTag);RouteElement.setData(element,data||{});if(customElements.get(details.elementTag)===void 0){console.error(`Custom Element not found: ${details.elementTag}. Are you missing an import or mis-spelled tag name?`)}this.renderOutletContent(element);if(!supressUrlGeneration){RouterElement.updateHistory("")}return element}dispatchOuletUpdated(){/**
      * Outlet updated event that fires after an Outlet replaces it's content.
      * @event OutletElement#onOutletUpdated
      * @type CustomEvent
