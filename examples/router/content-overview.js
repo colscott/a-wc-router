@@ -20,7 +20,7 @@ class ContentOverviewElement extends ContentBasicElement {
             <tr>
                 <td>path</td>
                 <td>Required - The path that will activate this route if matched against the url. TBD data params</td>
-                <td>element="my-custom-element"</td>
+                <td>path="/users/:userId/details"</td>
             </tr>
             <tr>
                 <td>fullmatch</td>
