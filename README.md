@@ -22,6 +22,56 @@ Then enter this url in the browser:
 
     http://localhost:3000/a-wc-router/examples/router/
 
+# Install
+
+    npm i a-wc-router
+
+# Usage
+## Using HTML
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <base href="/app/">
+            <script type="module" src="/node_modules/a-wc-router/build/es6-bundled/src/router.js"></script>
+            <script type="module" src="/src/my-page1.js"></script>
+        </head>
+        <body>
+            <a is="router-link" href="/app/page1">Page 1</a>
+            <a is="router-link" href="/app/page2">Page 2</a>
+            <a-router  style="display: block;">
+                <an-outlet>This content never shows because of the last catch all route</an-outlet>
+                <a-route path="/page1" element="my-page1"></a-route>
+                <a-route path="/page2" element="my-page2" import="/src/my-page2.js"></a-route>
+                <a-route path="*"><template>Page not found</template></a-route>
+            </a-router>
+        </body>
+    </html>
+    
+## Using Custom Element
+
+    import '../node_modules/a-wc-router/build/es6-bundled/src/router.js';
+    import './my-page1.js';
+
+    class MyApp extends HTMLElement {
+        connectedCallback() {
+            if (this.isConnected) {
+                this.innerHTML =   `
+                    <a is="router-link" href="/app/page1">Page 1</a>
+                    <a is="router-link" href="/app/page2">Page 2</a>
+                    <a-router  style="display: block;">
+                        <an-outlet>This content never shows because of the last catch all route</an-outlet>
+                        <a-route path="/page1" element="my-page1"></a-route>
+                        <a-route path="/page2" element="my-page2" import="/src/my-page2.js"></a-route>
+                        <a-route path="*"><template>Page not found</template></a-route>
+                    </a-router>
+                `;
+            }
+        }
+    }
+
+    customElements.define('my-app', MyApp);
+
 # Routing
 ## Routing using a router, outlet, routes and HTML anchors
 
