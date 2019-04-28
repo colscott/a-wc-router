@@ -12,7 +12,7 @@
 - Zero dependenies
 
 ## Examples
-Examples and further documentation can be found in the examples folder and are hosted [here](https://colscott.github.io/routing-wc/examples/)
+Examples and further documentation can be found in the examples folder and are hosted [here](https://colscott.github.io/a-wc-router/examples/)
 
 To run the examples locally run:
 
@@ -20,7 +20,7 @@ To run the examples locally run:
 
 Then enter this url in the browser:
 
-    http://localhost:3000/routing-wc/examples/router/
+    http://localhost:3000/a-wc-router/examples/router/
 
 # Routing
 ## Routing using a router, outlet, routes and HTML anchors

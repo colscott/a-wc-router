@@ -48,11 +48,11 @@ class NamedOutletExampleElement extends HTMLElement {
     <a class="item" is="router-link" href="(main:content-overview)">Overview</a>
     <a class="item" is="router-link" href="(main:content-basic)">Basic Outlet Assignment</a>
     <!--<a class="item" is="router-link" href="(main:content-nested)">Nested Outlets</a>-->
-    <a class="item" is="router-link" href="(main:content-import(/routing-wc/examples/named-outlet/content-import.js))">Import<br>Code Splitting<br>Lazy Loading</a>
-    <a class="item" is="router-link" href="(main:/routing-wc/examples/named-outlet/content-import-byconvention)">Import By Convention</a>
+    <a class="item" is="router-link" href="(main:content-import(/a-wc-router/examples/named-outlet/content-import.js))">Import<br>Code Splitting<br>Lazy Loading</a>
+    <a class="item" is="router-link" href="(main:/a-wc-router/examples/named-outlet/content-import-byconvention)">Import By Convention</a>
     <a class="item" is="router-link" href="(main:content-attr-params:param1=i&param2=ii)">Passing HTML Attribute Params</a>
     <a class="item" is="router-link" href="(main:content-prop-params:.param3=x&.param4=y)">Passing Object property Params</a>
-    <a class="item" is="router-link" href="(main:content-import(/routing-wc/examples/named-outlet/content-import.js):param1=attr1&param2=attr2&.param3=prop3&.param4=prop4)">Import with property and attribute Params</a>
+    <a class="item" is="router-link" href="(main:content-import(/a-wc-router/examples/named-outlet/content-import.js):param1=attr1&param2=attr2&.param3=prop3&.param4=prop4)">Import with property and attribute Params</a>
     <a class="item" is="router-link" href="(main:content-guards)">Guards</a>
 </div>
 <an-outlet name="main" style="display: block;"><p>Outlet not assigned yet.<br><br>Please click a link above to assign content to this outlet.</p></an-outlet>

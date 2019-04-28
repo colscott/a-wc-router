@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/colscott/routing-wc.git"
+    "url": "git+https://github.com/colscott/a-wc-router.git"
   },
   "keywords": [
     "routing",
@@ -34,7 +34,7 @@
   "author": "colin scott",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/colscott/routing-wc/issues"
+    "url": "https://github.com/colscott/a-wc-router/issues"
   },
-  "homepage": "https://github.com/colscott/routing-wc#readme"
+  "homepage": "https://github.com/colscott/a-wc-router#readme"
 }

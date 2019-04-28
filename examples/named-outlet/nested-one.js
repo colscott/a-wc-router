@@ -7,7 +7,7 @@ class NestedOne extends HTMLElement {
     <a-router>
         <an-outlet></an-outlet>
         <a-route path="/webcomponent" element="content-web-component"></a-route>
-        <a-route path="/webcomponent/import" import='/components/routing-wc/src/test-dummy.js' element="content-web-component-import"></a-route>
+        <a-route path="/webcomponent/import" import='/components/a-wc-router/src/test-dummy.js' element="content-web-component-import"></a-route>
         <a-route path="/nested" element="content-nested"></a-route>
         <a-route path="/content/import/webcomponent/data1/:requiredParam" element="content-params"></a-route>
         <a-route path="/webcomponent-data2/:optionalParam?"  element="content-params"></a-route>

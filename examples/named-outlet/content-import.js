@@ -8,7 +8,7 @@ class ContentImportElement extends ContentBasicElement {
         this.description = `
             <p>
                 Note that absolute paths must be used. This is due to the import being performed in the router code so the relative path will be relative to the location of the router script.
-                <pre class="ui segment">(/routing-wc/examples/named-outlet/content-import.js)</pre><br>
+                <pre class="ui segment">(/a-wc-router/examples/named-outlet/content-import.js)</pre><br>
                 The placement of the import source comes just after the tag name in the url.
             </p>
             <p>
@@ -23,7 +23,7 @@ class ContentImportElement extends ContentBasicElement {
                     The import is required immediately in order to render the page. The custom element script is imported as soon as possbile.<br>
                     In the screen grab below, the last script was done via an import and was loaded BEFORE the page load because it was needed to render the page.
                     <div style="text-align: center;">
-                        <img src="/routing-wc/examples/assets/images/import-immediate-fetch.png" style="width: 80%"></img>
+                        <img src="/a-wc-router/examples/assets/images/import-immediate-fetch.png" style="width: 80%"></img>
                     </div>
                 </li>
                 <li>
@@ -31,7 +31,7 @@ class ContentImportElement extends ContentBasicElement {
                     In the screen grab below, the last script was done via an import and was loaded AFTER the page load because it was not needed to render the page but it was still loaded so it is ready if the user clocks the link for that page.
 
                     <div style="text-align: center;">
-                        <img src="/routing-wc/examples/assets/images/import-pre-fetch.png" style="width: 80%"></img>
+                        <img src="/a-wc-router/examples/assets/images/import-pre-fetch.png" style="width: 80%"></img>
                     </div>
                 </li>
                 </ol>
@@ -39,7 +39,7 @@ class ContentImportElement extends ContentBasicElement {
             <p>
                 Here is how the network time line would look if we used the import feature for all of the links on this page:
                 <div style="text-align: center;">
-                    <img src="/routing-wc/examples/assets/images/import-all.png" style="width: 80%"></img>
+                    <img src="/a-wc-router/examples/assets/images/import-all.png" style="width: 80%"></img>
                 </div>
                 The current page being loaded was the Basic Outlet Assignment page. You can see that the content-basic.js was loaded as soon as possible. The other scripts used for the pages not rendered were loaded after the page was ready.
             </p>

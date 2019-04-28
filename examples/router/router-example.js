@@ -34,17 +34,17 @@ class RouterExampleElement extends HTMLElement {
         <code-example class="ui segment"></code-example>
         <div class="ui segment" code-example="Code to output links and outlet below">
 <div class="ui four item menu">
-    <a  class="item" is="router-link" href="/routing-wc/examples/router/webcomponent">Overiew</a>
-    <a  class="item" is="router-link" href="/routing-wc/examples/router/nested">Nested routers</a>
-    <a  class="item" is="router-link" href="/routing-wc/examples/router/named">Named routers</a>
-    <a  class="item" is="router-link" href="/routing-wc/examples/router/guards">Guards</a>
+    <a  class="item" is="router-link" href="/a-wc-router/examples/router/webcomponent">Overiew</a>
+    <a  class="item" is="router-link" href="/a-wc-router/examples/router/nested">Nested routers</a>
+    <a  class="item" is="router-link" href="/a-wc-router/examples/router/named">Named routers</a>
+    <a  class="item" is="router-link" href="/a-wc-router/examples/router/guards">Guards</a>
 </div>
 <a-router  style="display: block;">
     <!-- Outlet definition is first -->
     <an-outlet>This content never shows because of the last catch all route</an-outlet>
     <!-- Route definitions are next. There are a variety of examples below.  -->
     <a-route path="/webcomponent" element="content-overview"></a-route>
-    <a-route path="/webcomponent/import" import='/components/routing-wc/src/test-dummy.js' element="content-web-component-import"></a-route>
+    <a-route path="/webcomponent/import" import='/components/a-wc-router/src/test-dummy.js' element="content-web-component-import"></a-route>
     <a-route path="/nested" element="content-nested"></a-route>
     <a-route path="/named" element="content-named"></a-route>
     <a-route path="/guards" element="content-guards"></a-route>

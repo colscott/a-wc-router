@@ -19,8 +19,8 @@ export class MainMenuElement extends HTMLElement {
                 <div class="item">
                     <div class="header">Usage</div>
                     <div class="menu">
-                        <a class="item" href="/routing-wc/examples/named-outlet/">Named Outlets</a>
-                        <a class="item" href="/routing-wc/examples/router/">Routers</a>
+                        <a class="item" href="/a-wc-router/examples/named-outlet/">Named Outlets</a>
+                        <a class="item" href="/a-wc-router/examples/router/">Routers</a>
                     </div>
                 </div>
             </div>
