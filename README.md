@@ -12,7 +12,7 @@
 - Zero dependenies
 
 ## Examples
-Examples can be found in the examples folder and are hosted [here](https://colscott.github.io/routing-wc/examples/)
+Examples and further documentation can be found in the examples folder and are hosted [here](https://colscott.github.io/routing-wc/examples/)
 
 To run the examples locally run:
 
@@ -20,128 +20,46 @@ To run the examples locally run:
 
 Then enter this url in the browser:
 
-    http://localhost:3000/app/examples/named-outlet/
+    http://localhost:3000/routing-wc/examples/router/
 
-## Basic Routing
-Routing Web Component comes with two main ways of routing.
-- Declaritive routing using router, routes and outlets
-- A simpler, but still powerful and declarative, named outlet approach
+# Routing
+## Routing using a router, outlet, routes and HTML anchors
 
-### Named Outlet example
-Routing can also be acheived without Routing and Routes. You can set content by targeting an outlet by name and injecting a custom element into it. You may have as many named outlets on the page as you like.
-
-    // Defined the outlet somewhere
-    <an-outlet name="main">Please click a link</an-outlet>
-
-    // Define the link anywhere in the application
-    // This example also passes a HTML attribute 'accountNumber' to the wc-account-details Web Component
-    // Format is (outlet-name:tag-name-to-inject(/optional/url/for/importing/script.js):param1=value1&param2=value2)
-    <a href="/(main:user-main)">click for user</a>
-    <a href="/(main:item-main)">click for item</a>
-
-### Routing example
-
-    // Main router showing same usage as the Name Outlet example above
     <a-router>
-        <an-outlet></an-outlet>
+        <an-outlet>Please click a link</an-outlet>
         <a-route path="/user" import="./userBundle.js" element="user-main"></a-route>
         <a-route path="/item" import="./itemsBundle.js" element="item-main"></a-route>
         <a-route path="/template"><template>Hello Template</template></a-route>
         <a-route path="*"><template></template></a-route>
     <a-router>
+    ....
+    <a href='user'>click for user-main custom element</a>
+    <a href='item'>click for item-main custom element</a>
 
-    <a href='user'>click for user</a>
-    <a href='item'>click for item</a>
-## Basic Routing in more detail
-## Named Outlets
-You can also target outlets without using routing at all. This is an extreamly simple way to create a scalable routing application.
+## Passing data to routes
 
-The format of the links href is as follows:
+    <a-route path="/user1/:requiredParam" element="user-main"></a-route>
+    <a-route path="/user2/:optionalParam?" element="user-main"></a-route>
+    <a-route path="/user3/:atLeastOneParam+" element="user-main"></a-route>
+    <a-route path="/user4/:anyNumOfParam*" element="user-main"></a-route>
+    <a-route path="/user5/:firstParam/:secondParam" element="user-main"></a-route>
+    ....
+    <a href="user1/12">click for user with required param</a>
+    <a href="user2">click for user with optional param</a>
+    <a href="user3/12/tom">click for user with at least one param</a>
+    <a href="user4/12/tom">click for user any number of params</a>
+    <a href="user5/12/tom">click for user with two named params</a>
 
-    <a href="(myOutletName:my-web-component(./import/script.js):htmlAttr1=value1&htmlAttr2=value2)">
-                
-myOutletName ==> The name of the outlet to populate 
+## Code splitting and pre-fetching modules for routes
 
-my-web-component ==> The tage name of the Web Component to put in the outlet
+    <a-route path="/user" import="/path-to/user-main.js" element="user-main"></a-route>
 
-(./import/script.js) ==> Optional script to load that contains the Web Component
+## Code splitting and lazy loading modules for routes
 
-htmlAttr1=value1&htmlAttr2=value2 ==> HTML attributes and values to set on the Web Component
+    <a-route path="/user" import="/path-to/user-main.js" lazyload="true" element="user-main"></a-route>
 
-Example:
+## Nested Routing
 
-    // Defined the outlet somewhere
-    <an-outlet name="account-details">Please select an account</an-outlet>
-
-    // Define the link anywhere in the application
-    // This example also passes a HTML attribute 'accountNumber' to the wc-account-details Web Component
-    <a class="item" href="/(account-details:wc-account-details:accountNumber=${account.number})">
-
-
-## Named Routers
-Just like you can target outlets by name, you can also target routers by name. This lets you target auxiliary routers or target child routers without having to include the parent route in the link href.
-
-e.g. if you name a child router you can target like this:
-
-    <a href="(childRouterName:userDetails)"></a>
-
-Rather than the full href:
-
-    <a href="main/admin/user/userDetails"></a>
-
-## Styling Active Routes
-You can style links that partially match the current url. This is implemented by adding class names to registered links that have a href that starts with a current valid match. The match could be a route, named outlet or named route.
-
-To give a link the ability to be marked active, you must register it first. Link that have not been registered will not participate in this logic.
-
-Named outlet example:
-
-    // Defined the outlet somewhere
-    <an-outlet name="account-details">Please select an account</an-outlet>
-
-    // Define the link anywhere in the application
-    <a class="item" href="/(account-details:wc-account-details/${account.number})">
-
-    // Register the link somewhere (could be after you generate the link itself)
-    RouterElement.registerLinks(this.querySelectorAll('a'));
-
-    // Or register the links via an event for a more decoupled approach
-    window.dispatchEvent(
-        new CustomEvent(
-            'routerLinksAdded', {
-                detail: {
-                    links: this.querySelectorAll('a') }}));
-
-    // Or register your link by giving the link "router-link" behavior
-    <a is="router-link" class="item" href="/(account-details:wc-account-details/${account.number})">
-
-Normal routes and named routes are handled the same way.
-
-## Navigating
-As well as using links to navigate, you can also navigate using code:
-
-    RouterElement.navigate('myUrl');
-    RouterElement.navigate('/(account-details:wc-account-details/${account.number})');
-
-    // Or via an event for a more decoupled approach
-    window.dispatchEvent(
-        new CustomEvent(
-            'navigate', {
-                detail: {
-                    href: '/(account-details:wc-account-details/${account.number})' }}));
-## Base URL
-Routing only takes place if a url also matches the document.baseURI.
-The document.baseURI is commonly used in Single Page Application frameworks to distiguish between a url that is meant for the client app and a url that is meant to be sent to the server, like a REST API call.
-To set the document.baseURI set a BASE tag to the root of the client app.
-
-    <base href="/MyAppRoot/">
-
-## Nested Routing and Code Splitting
-Since &lt;a-router&gt;s can be declared anywhere, they can also exist in child content that is lazy loaded from imported script. This makes the routing dynamic and avoids an all knowing monolithic application routing declaration. Instead each router knows about it's own routes and that's it. Other routes can exist and still work as normal (grandchild routing, auxiliary routing, etc.).
-
-For example:
-
-    // Main router
     <a-router>
         <an-outlet></an-outlet>
         <a-route path="/user" import="./userBundle.js" element="user-main"></a-route>
@@ -155,87 +73,92 @@ For example:
             this.innerHTML = `
                 <a-router>
                     <an-outlet></an-outlet>
-                    <a-route path="/userDetails" element="user-detials"></a-route>
-                    <a-route path="/userEdit" element="user-edit"></a-route>
+                    <a-route path="/details" element="user-detials"></a-route>
+                    <a-route path="/edit" element="user-edit"></a-route>
                 </a-route>
                 `;
         }
     }
+    ....
+    <a href='/user/details'>Navigate to the nested route</a>
 
-By default, a routes import is eagerly fetched before the route is used. If for some reason you want to lazy load the import only when it is first required then confiure the route with the lazyload="true" attribute.
+## Base URL
+Routing only takes place if a url also matches the document.baseURI.
 
-    <a-route path="/user" import="./userBundle.js" lazyload="true"></a-route>
+    <base href="/MyAppRoot/">
 
-## Data Params
-### In Named Outlets
-For named outlets, there are no routes so the only place to defined he data to pass is in the link:
+    <a href='/user'>Wont route</a>
+    <a href='/MyAppRoot/user'>Will route</a>
 
-    <a href=(myOutletName:my-web-component-tag:html-attr1=value1&html-attr2=value2)>
+# Named outlets (no router of routes requried)
+## Routing using named outlets and HTML anchors
+    
+    <an-outlet name="main">Please click a link</an-outlet>
+    ....
+    <a href="/(main:user-main)">Assign <user-main> element to outlet main</a>
+    <a href="/(main:item-main)">Assign <item-main> element to outlet</a>
 
-html-attr1 attribute will be set to value1 and html-attr2 attribute will be set to value2 on the my-web-component that gets rendered in the outlet.
+## Passing data to named outlets
+    
+    <an-outlet name="main">Please click a link</an-outlet>
+    ....
+    <a href="/(main:user-main:userId=2&userName=tom)">Assign <user-main userId="2" userName="tom"> to outlet</a>
 
-### In Routes
-If your using routes then you define the available data that can be passed through on the path. This is done like so:
+## Code splitting and pre-fetching modules for named outlets
+    
+    <an-outlet name="main">Please click a link</an-outlet>
+    ....
+    <a class="item" is="router-link" href="(main:user-main(/path-to/user-main.js))">Load <user-main> from /path-to/user-main.js</a>
+    <a class="item" is="router-link" href="(main:/path-to/user-main)">Load <user-main> from /path-to/user-main.js</a>
 
-    <a-route path="/webcomponent-data1/:requiredParam" import='./test-dummy.js' element="test-dummy"></a-route>
-    <a-route path="/webcomponent-data2/:optionalParam?" import='./test-dummy.js' element="test-dummy"></a-route>
-    <a-route path="/webcomponent-data3/:atLeastOneParam+" import='./test-dummy.js' element="test-dummy"></a-route>
-    <a-route path="/webcomponent-data4/:anyNumOfParam*" import='./test-dummy.js' element="test-dummy"></a-route>
-    <a-route path="/webcomponent-data5/:firstParam/:secondParam" import='./test-dummy.js' element="test-dummy"></a-route>
+# General to Routing and Named Outlets
+## Styling link matching the active routes
+    
+    <style>
+        a.active {
+            color: red;
+        }
+    </style>
 
-You then include the data in the link href:
+    <a class="item" href="/user/123">Regular anchor - will route but wont get active status styling</a>
+    <a is="router-link" class="item" href="/user/123">Router link - will route and get active status styling</a>
 
-    <a href="/webcomponent-data1/myRequiredValue">
+## Navigating using HTML anchors
+    <a class="item" href="/user/123">Regular anchor - will route but wont get active status styling</a>
+    <a is="router-link" class="item" href="/user/123">outer link - will route and get active status styling</a>
 
-## Route Guards
-The route tag emits a onRouteLeave event that preventDefault can be set to true to cancel the current route match.
+## Navigating using events
+    window.dispatchEvent(
+        new CustomEvent(
+            'navigate', {
+                detail: {
+                    href: '/(user/123' }}));
 
-Another option is to listen to the onRouteMatch event and set preventDefault to true. This will prevent the current route match. However, the next route will be tesged for a match.
+## Navigating using RouterElement
+    RouterElement.navigate('myUrl');
+    RouterElement.navigate('/user/123');
 
-## Modifying Routes
-&lt;a-router&gt; can be modified to add or remove &a-route&gt; at anytime. This allows it to be changed to meet dynamic routing needs.
-You can even add or remove routers themselves.
+## Guards
+    window.addEventListener('onRouteLeave', guard);
+
+    guard(event) {
+        if (document.getElementById('guard').checked) {
+            // preventDefault to prevent the navigation
+            event.preventDefault();
+        }
+    }
+
 ## Lifecycle Events
 ### onRouterAdded
 ### onRouteMatch
 ### onRouteLeave
-## The Elements
-### &lt;a-router&gt;
-The parent element that organizes child routes.
-
-#### Attributes
-| Name | Value | Description |
-|------|-------|-------------|
-| base-white-list | string RegExp | Expicitly white lists URL that the router should route. If this is set it everything that does not match will not be routed. |
-
-#### Events
-| Name | Value | Description |
-|------|-------|-------------|
-|onRouterAdded|Reference to the router element|Used internally to communicate to a parent router that a child router has been added to the DOM.|
-|onRouteCancelled|url that never got routed|Fires if routing was cancelled as a result of the cancelling of a onRouteLeave event|
-
-### &lt;a-route&gt;
-A route entry in the router. performs matching logic.
-#### Atributes
-| Name | Value | Description |
-|------|-------|-------------|
-| path | string | The path to match against. TODO expand on allowed path syntax. |
-| fullmatch | N/A | If the route should only match if it matches the full URL. Should be set on routes that have no, and are never expected to have, childern. Can be modified at any point. |
-| import | string | A JavaScript bundle to load. Used with the 'element' attribute to load the JavaScript that defines the required Element. |
-| element | string | The element tag name to output when this route matches. Use the 'import' attribute to code split. |
-| lazyload | boolean | Default false. Whether to load imports straight away or wait until a match is made. Default 'false' load right away. Set to 'true' to load import when first match is made.
-#### Events
-| Name | Value | Description |
-|------|-------|-------------|
-| onRouteMatch | remainder | The remainder of the URL that was not matched. Typically used for child router. Can be cancelled with event.preventDefalt() in which case routing will continue by matching aginst the next route. |
-| | data | Map of data found in the section of url that was matched. |
-| onRouteLeave| newRoute | Fired before matching occurs. Every active route fires the event. If any events are prevented from defualt action then the routing is preventde. It's a chance to prevent the router from leaving the current route. For example: data maybe lost if the user leaves the current route. Stop routing by event.preventDefualt(); |
-
-### &lt;an-outlet&gt;
-Place holder content outlet for the &lt;a-router&gt; it is in.
+### onRouteNotHandled
+### onRouteCancelled
+### onLinkActiveStatusUpdated
+### onOutletUpdated
 
 ## Testing
 To run tests, install polymer cli.
     polymer serve
 And navigate to:
-    /components/a-wc-router/test/unit/index.html
+    http://127.0.0.1:8081/components/a-wc-router/test/unit
