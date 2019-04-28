@@ -1,5 +1,6 @@
 ///@ts-check
 import { NamedRouting } from './named-routing.js'
+
 export class RouterElement extends HTMLElement {
   /** 
    * Event handler for handling when child router is added.
@@ -15,13 +16,13 @@ export class RouterElement extends HTMLElement {
 
   static handlerRouterLinksAdded(event) {
     if (event.detail.links) {
-      RouterElement.registerLinks(event.detail.links);
+      event.detail.onRegistered = RouterElement.registerLinks(event.detail.links);
     }
   }
 
   static handlerNavigate(event) {
     if (event.detail.href) {
-      RouterElement.navigate(event.detail.href);
+      event.detail.onNavigated = RouterElement.navigate(event.detail.href);
     }
   }
 
@@ -57,7 +58,7 @@ export class RouterElement extends HTMLElement {
    * Global handler for url changes.
    * Should be called if the user changes the URL via the URL bar or navigating history
    */
-  static changeUrl() {
+  static async changeUrl() {
     let hash = RouterElement._getHash();
     let path = decodeURIComponent(window.location.pathname);
     let query = window.location.search.substring(1);
@@ -73,14 +74,14 @@ export class RouterElement extends HTMLElement {
     }
 
     var newUrl = RouterElement._getUrl(window.location);
-    RouterElement.dispatch(newUrl, true);
+    await RouterElement.dispatch(newUrl, true);
   }
   
   /**
    * Global handler for page clicks. Filters out and handles clicks from links.
    * @param {(MouseEvent|HTMLAnchorElement|string)} navigationSource - The source of the new url to navigate to. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
    */
-  static navigate(navigationSource) {
+  static async navigate(navigationSource) {
     let event = null;
     let anchor = null;
 
@@ -132,7 +133,7 @@ export class RouterElement extends HTMLElement {
 
     let url = new URL(href);
     var newUrl = RouterElement._getUrl(url);
-    RouterElement.dispatch(newUrl);
+    await RouterElement.dispatch(newUrl);
   }
 
   /**
@@ -141,7 +142,8 @@ export class RouterElement extends HTMLElement {
    * @param {boolean} [skipHistory]
    * @fires RouterElement#onRouteCancelled
    */
-  static dispatch(url, skipHistory) {
+  static async dispatch(url, skipHistory) {
+    // console.info('dispatch: ' + url);
     let basePath = RouterElement.baseUrlSansHost();
     let shortUrl = url.substr(basePath.length);
     RouterElement._route = {
@@ -169,13 +171,13 @@ export class RouterElement extends HTMLElement {
 
     RouterElement._activeRouters = [];
 
-    if (RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
-      RouterElement.updateHistory(url);
+    if (await RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
+      await RouterElement.updateHistory(url);
     }
   }
 
   /** Updates the location history with the new href */
-  static updateHistory(href) {
+  static async updateHistory(href) {
     let urlState = RouterElement.getUrlState();
     let url = urlState;
 
@@ -198,13 +200,18 @@ export class RouterElement extends HTMLElement {
       window.history.pushState({}, '', fullNewUrl);
     }
 
-    RouterElement.updateAnchorsStatus(urlState);
+    await RouterElement.updateAnchorsStatus(urlState);
   }
 
-  /** Sets the active status of any registered links based on the current URL */
-  static updateAnchorsStatus(url) {
+  /**
+   * Sets the active status of any registered links based on the current URL
+   * @param {string} [url] url to match against for link status
+   * @param {any[]} [links] optional list of links to update the status for
+   * @returns {Promise} Named items require parsing and processing prior to being analyzed. Resolved when named items are finished parsed and processed.
+   */
+  static async updateAnchorsStatus(url, links) {
     url = url || RouterElement.getUrlState();
-    let currentAnchors = RouterElement._anchors;
+    let currentAnchors = links || RouterElement._anchors;
     let nextAnchors = [];
 
     // Tidy up any unconnected anchors
@@ -220,7 +227,7 @@ export class RouterElement extends HTMLElement {
     nextUrlFragment:
     for (let j = 0, jLen = urlFragments.length; j < jLen; j++) {
       let urlFragment = urlFragments[j];
-      let urlFragNamedItemMatch = NamedRouting.parseNamedItem(urlFragment, true);
+      let urlFragNamedItemMatch = await NamedRouting.parseNamedItem(urlFragment, true);
       nextLink:
       for (let i = 0, iLen = nextAnchors.length; i < iLen; i++) {
         let link = nextAnchors[i];
@@ -251,13 +258,16 @@ export class RouterElement extends HTMLElement {
                 }
               }
             }
+            urlFragment = urlFragment[0] === '/' ? urlFragment.substr(1) : urlFragment;
             for (let k = 0, kLen = routes.length; k < kLen; k++) {
-              if (urlFragment == routes[k]) {
+              let routeUrl = routes[k][0] === '/' ? routes[k].substr(1) : routes[k];
+
+              if (urlFragment == routeUrl) {
                 // full match on route
                 link.a.classList.add(link.a.activeClassName || 'active');
                 link = null;
                 continue nextLink;
-              } else if (urlFragment.indexOf(routes[k]) === 0) {
+              } else if (urlFragment.indexOf(routeUrl) === 0) {
                 // partial match on route
                 link.a.classList.add(link.a.activeClassName || 'active');
                 link = null;
@@ -309,8 +319,10 @@ export class RouterElement extends HTMLElement {
    * Iterates over each child RouterElement and calls it to match it portion of the current URL.
    * @param {string} url - While URL. Will be parsed for individual router URLs.
    * @param {RouterElement[]} routers
+   * @returns {Promise<boolean>} resolves when matching is complete. false if matching was cancelled.
    */
-  static performMatchOnRouters(url, routers) {
+  static async performMatchOnRouters(url, routers) {
+    // console.info('performMatchOnRouters: ' + url);
     // TODO query string data should be placed on RouterElement so it's accessible across all outlets. It's regarded as shared data across the routers.
     // TODO Maybe have a way to regiser for changes to query string so routes can react
     // TODO auxilary routers - start unit testing
@@ -321,7 +333,7 @@ export class RouterElement extends HTMLElement {
     let urlsWithoutNamedOutlets = [];
 
     for(let i = 0, iLen = urls.length; i < iLen; i++) {
-      let match = NamedRouting.parseNamedItem(urls[i]);
+      let match = await NamedRouting.parseNamedItem(urls[i]);
       if (match && match.cancelled) {
         return false;
       }
@@ -334,10 +346,9 @@ export class RouterElement extends HTMLElement {
     for (let iLen = routers.length; i < iLen; i++) {
       let router = routers[i];
       if (urlsWithoutNamedOutlets[i]) {
-        router.performMatchOnRouter(urlsWithoutNamedOutlets[i] || '');
+        await router.performMatchOnRouter(urlsWithoutNamedOutlets[i] || '');
       }
     }
-
     return true;
   }
 
@@ -375,24 +386,23 @@ export class RouterElement extends HTMLElement {
     return urls;
   }
 
-  static registerLinks(links, activeClassName) {
-    let currentAnchors = RouterElement._anchors;
+  /**
+   * Registers HTMLAnchorElements so that they become candidates route status styling.
+   * @param {HTMLAnchorElement[]} links 
+   * @param {string} activeClassName 
+   */
+  static async registerLinks(links, activeClassName) {
+    // console.info('registerLinks');
+    RouterElement.removeDisconnectedAnchors();
 
-    let nextAnchors = [];
-
-    // Tidy up any unconnected anchors
-    for (let i = 0, iLen = currentAnchors.length; i < iLen; i++) {
-      if (currentAnchors[i].a.isConnected === true) {
-        nextAnchors[nextAnchors.length] = currentAnchors[i];
-      }
-    }
+    const newAnchors = [];
 
     // Add the new anchors
     for (let i = 0, iLen = links.length; i < iLen; i++) {
       if (links[i].href) {
-        let matches = RouterElement.sanitizeLinkHref(links[i]);
+        let matches = await RouterElement.sanitizeLinkHref(links[i]);
         if (matches) {
-          nextAnchors[nextAnchors.length] = {
+          newAnchors[newAnchors.length] = {
             a: links[i],
             activeClassName: activeClassName,
             routerMatches: matches
@@ -404,10 +414,24 @@ export class RouterElement extends HTMLElement {
       }
     }
 
+    RouterElement._anchors = RouterElement._anchors.concat(newAnchors);
+
+    RouterElement.updateAnchorsStatus(undefined, newAnchors);
+  }
+
+  static removeDisconnectedAnchors() {
+    const currentAnchors = RouterElement._anchors;
+    const nextAnchors = [];
+
+    // Tidy up any unconnected anchors
+    for (let i = 0, iLen = currentAnchors.length; i < iLen; i++) {
+      if (currentAnchors[i].a.isConnected === true) {
+        nextAnchors[nextAnchors.length] = currentAnchors[i];
+      }
+    }
+
     // Do this after pushing history location state
     RouterElement._anchors = nextAnchors;
-
-    RouterElement.updateAnchorsStatus();
   }
 
   /**
@@ -418,10 +442,10 @@ export class RouterElement extends HTMLElement {
   /**
    * 
    * @param {(MouseEvent|HTMLAnchorElement|string)} hrefSource - The source of the new url to handle. Can be a click event from clicking a link OR an anchor element OR a string that is the url to navigate to.
-   * @returns {AssignmentMatches} assignmentMatches
+   * @returns {Promise<AssignmentMatches>} assignmentMatches
    * 
    */
-  static sanitizeLinkHref(hrefSource) {
+  static async sanitizeLinkHref(hrefSource) {
     let href = RouterElement._getSameOriginLinkHref(hrefSource);
     let url = new URL(href);
     let hash = RouterElement._getHash();
@@ -436,7 +460,7 @@ export class RouterElement extends HTMLElement {
     let namedMatches = [];
     let routerMatches = [];
     for(let i = 0, iLen = urls.length; i < iLen; i++) {
-      let namedMatch = NamedRouting.parseNamedItem(urls[i], true);
+      let namedMatch = await NamedRouting.parseNamedItem(urls[i], true);
       if(namedMatch) {
         namedMatches.push(namedMatch);
       } else {
@@ -449,13 +473,14 @@ export class RouterElement extends HTMLElement {
 
   disconnectedCallback(){
     RouterElement.removeRouter.call(this._parentRouter, this);
-    // this.removeEventListener('onRouterAdded', this.handlerAddRouter, false);
+    this.removeEventListener('onRouterAdded', this.handlerAddRouter, false);
+    this.removeEventListener('onRouteAdded', this.handlerAddRoute, false);
     if (this.getName()) {
       NamedRouting.removeNamedItem(this.getName());
     }
   }
 
-  connectedCallback(){
+  async connectedCallback(){
     if (!this.created) {
       this.created = true;
 
@@ -488,13 +513,19 @@ export class RouterElement extends HTMLElement {
       this.dispatchEvent(routerAddedEvent);
       this._parentRouter = routerAddedEvent.detail.parentRouter;
       this.addEventListener('onRouterAdded', (this.handlerAddRouter = RouterElement.handlerAddRouter.bind(this)), false);
+      this.addEventListener('onRouteAdded', (this.handlerAddRoute = this.handlerAddRoute.bind(this)), false);
 
-      NamedRouting.addNamedItem(this);
+      await NamedRouting.addNamedItem(this);
     }
   }
 
   constructor() {
     super();
+
+    /**
+     * @type import('./routes-route').Match
+     */
+    this._currentMatch = null;
 
     this.canLeave = NamedRouting.canLeave.bind(this);
   }
@@ -502,7 +533,7 @@ export class RouterElement extends HTMLElement {
   /**
    * Global initialization
    */
-  static initialize() {
+  static async initialize() {
     if (!RouterElement._initialized) {
       RouterElement._initialized = true;
       //RouterElement.whiteListRegEx = this.getAttribute('base-white-list') || '';
@@ -519,7 +550,7 @@ export class RouterElement extends HTMLElement {
       // Listen for navigate requests
       window.addEventListener('navigate', RouterElement.handlerNavigate.bind(RouterElement), false);
 
-      RouterElement.changeUrl();
+      await RouterElement.changeUrl();
     }
   }
 
@@ -532,14 +563,21 @@ export class RouterElement extends HTMLElement {
 
   getCurrentMatch() {
     if (!this._currentMatch && this._parentRouter._currentMatch) {
-      this._currentMatch = { remainder: this._parentRouter._currentMatch.remainder };
+      this._currentMatch =
+      {
+        data: null,
+        redirect: null,
+        url: '',
+        useCache: false,
+        remainder: this._parentRouter._currentMatch.remainder
+      };
       // TODO get remainder from parent but ony take this routers url from it
       // e.g. split :: and take the firs put the rest back
       // TODO if we support adding a router name to the URL this is where we would check for it: (myRouter:users/main) --> target router named myRouter with url users/main
       let remainder = this._currentMatch.remainder;
       if (remainder && remainder[0] === '(') {
-        remainder = RouterElement.splitUrlIntoRouters(remainder.substring(1, remainder.length - 2));
-        this._currentMatch.remainder = remainder.shift();
+        let remainderArray = RouterElement.splitUrlIntoRouters(remainder.substring(1, remainder.length - 2));
+        this._currentMatch.remainder = remainderArray.shift();
         // The next line is done in in the postProcessMatch
         // this._parentRouter._currentMatch.remainder = '(' + remainder.join('::') + ')';
       }
@@ -548,49 +586,61 @@ export class RouterElement extends HTMLElement {
     return this._currentMatch;
   }
 
+  /** 
+   * Event handler for handling when child route is added.
+   * Used to link up RouterElements with child RouteElements even through Shadow DOM.
+   * @param {CustomEvent} event - routeAdded event
+   */
+  handlerAddRoute(event) {
+    event.stopPropagation();
+    event.detail.router = this;
+    event.detail.onRouteAdded = this.addRoute(event.detail.route);
+  }
+
   /**
    * Performs matching for nested routes as they connect.
-   * @param {import('./routes-route').RouteElement} routeElement 
+   * @param {import('./routes-route').RouteElement} routeElement
+   * @returns {Promise}
    */
-  addRoute(routeElement) {
-    console.log('route added: ' + routeElement.getAttribute('path'));
+  async addRoute(routeElement) {
+    // console.info('route added: ' + routeElement.getAttribute('path'));
     
     if (!this.hasMatch) {
       let currentMatch = this.getCurrentMatch();
       if (currentMatch){
         if(currentMatch.remainder) {
-            this.performMatchOnRoute(currentMatch.remainder, routeElement);
+            await this.performMatchOnRoute(currentMatch.remainder, routeElement);
         }
       } else {
-        this.performMatchOnRoute(RouterElement._route.url, routeElement);
+        await this.performMatchOnRoute(RouterElement._route.url, routeElement);
       }
     }
   }
 
-  // TODO 
-  // go (url)
-  // {
-  //   let match = this.performMatchOnRouter(url);
-  //   if (match) {
-  //     // push new history
-  //   }
-  // }
-
   /**
    * Takes in a url that contains named router data and renders the router using the information
    * @param {string} url to process as a named item
+   * @returns {Promise<import('./routes-route.js').Match>}
    */
-  processNamedUrl(url) {
-    return this.performMatchOnRouter(url);
+  async processNamedUrl(url) {
+    return await this.performMatchOnRouter(url);
   }
 
   /**
    * Performs route matching by iterating through routes looking for matches
    * @param {String} url  
+   * @returns {Promise<import('./routes-route.js').Match>}
    */
-  performMatchOnRouter(url) {
+  async performMatchOnRouter(url) {
+    // console.group('performMatchOnRouter: ' + url);
     this.hasMatch = false;
-    this._currentMatch = { remainder: url };
+    this._currentMatch = {
+      remainder: url,
+      data: null,
+      redirect: null,
+      url: '',
+      useCache: false
+    };
     let routeElements = this.getRouteElements();
     let outletElement = this.getOutletElement();
     let match = null;
@@ -598,9 +648,9 @@ export class RouterElement extends HTMLElement {
     let iLen = routeElements.length;
     for(; i < iLen; i++) {
       let routeElement = routeElements[i];
-      match = this.performMatchOnRoute(url, routeElement);
+      match = await this.performMatchOnRoute(url, routeElement);
       if (match != null) {
-        console.log('route matched -> ', routeElement.getAttribute('path'));
+        // console.info('route matched -> ', routeElement.getAttribute('path'));
         i++;
         break;
       }
@@ -614,16 +664,24 @@ export class RouterElement extends HTMLElement {
 
     if (match === null) {
       if (outletElement.renderOutletContent) {
-        outletElement.renderOutletContent("No matching route for url " + url + " \r\nTo replace this message add a 404 catch all route\r\n <a-route path='*'><template>catach all - NotFound</template></a-route>");
+        outletElement.renderOutletContent("No matching route for url " + url + " \r\nTo replace this message add a 404 catch all route\r\n &lt;a-route path='*'>&lt;template&gt;catach all - NotFound&lt;/template&gt;&lt;/a-route&gt;");
         console && console.error &&  console.error("404 - Route not found for url " + url);
       }
       return null;
     }
+    // console.log('leaving performMatchOnRouter ' + url);
+    // console.groupEnd();
     
     return match;
   }
 
-  performMatchOnRoute(url, routeElement) {
+  /**
+   * Tries to invoke matching of a url to a {RouteElement}
+   * @param {string} url to match
+   * @param {import('./routes-route').RouteElement} routeElement to match against
+   * @returns {Promise<import('./routes-route.js').Match>}
+   */
+  async performMatchOnRoute(url, routeElement) {
     // RouteElement not connected yet
     if (!routeElement.match) {
       return null;
@@ -633,24 +691,23 @@ export class RouterElement extends HTMLElement {
     if (match != null) {
       if (match.redirect) {
         // TODO If the route being redirected to comes after then it might not have loaded yet
-        return this.performMatchOnRouter(match.redirect)
+        return await this.performMatchOnRouter(match.redirect)
       }
       let activeRouters = RouterElement._activeRouters;
       activeRouters.push({route: routeElement, router: this, match: match});
       this._currentMatch = match;
 
-      if (match.useCache) {
-        // Content is already loaded so addRoute will not get called. Start the matching for children manually.
-        if (this._routers && match.remainder) {
-          RouterElement.performMatchOnRouters(match.remainder, this._routers);
-        }
-      } else {
+      if (!match.useCache) {
         let outletElement = this.getOutletElement();
         /**
          * @param {string | HTMLElement | DocumentFragment} content
          */
-        routeElement.getContent(match.data)
-          .then((content) => outletElement.renderOutletContent(content));
+        let content = await routeElement.getContent(match.data);
+        outletElement.renderOutletContent(content);
+      }
+
+      if (this._routers && match.remainder) {
+        await RouterElement.performMatchOnRouters(match.remainder, this._routers);
       }
 
       this.postProcessMatch();

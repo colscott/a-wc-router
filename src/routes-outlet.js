@@ -5,7 +5,7 @@ import { RouteElement } from './routes-route.js'
 
 export class OutletElement extends HTMLElement {
 
-  connectedCallback() {
+  async connectedCallback() {
     if (this.isConnected) {
       if (!this.created) {
         this.created = true;
@@ -13,9 +13,9 @@ export class OutletElement extends HTMLElement {
         // p.textContent = 'Please add your routes!';
         // this.appendChild(p);
 
-        NamedRouting.addNamedItem(this);
+        await NamedRouting.addNamedItem(this);
       }
-      RouterElement.initialize();
+      await RouterElement.initialize();
     }
   }
 
@@ -45,11 +45,11 @@ export class OutletElement extends HTMLElement {
   /**
    * Replaces the content of this outlet with the supplied new content
    * @fires OutletElement#onOutletUpdated
-   * @param {string|DocumentFragment|HTMLElement} content - Content that will replace the current content of the outlet
+   * @param {string|DocumentFragment|Node} content - Content that will replace the current content of the outlet
    */
   renderOutletContent(content) {
     this.innerHTML = '';
-    // console.log('outlet rendered: ' + this.outletName, content);
+    // console.info('outlet rendered: ' + this.outletName, content);
 
     if (typeof content === 'string') {
       this.innerHTML = content;

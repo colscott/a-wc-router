@@ -6,11 +6,12 @@
   * @property {Object} options
   * @property {string} options.import
   */
+
 /**
   * @typedef {Object} NamedMatch
-  * @property {name} name of the route or outlet to assign to
-  * @property {string} url - The assignment url
-  * @property {string} urlEscaped - The assignment url escaped
+  * @property {string} name of the route or outlet to assign to
+  * @property {string} url - The assignment url that was matched and consumed
+  * @property {string} urlEscaped - The url that was matched and consumed escaped of certain characters that will break the url on servers.
   * @property {boolean} cancelled - If a failed attempt at assignment was made
   * @property {ParseNamedOutletAsignment} namedOutlet - Any named outlet assignments found
   */
@@ -21,7 +22,7 @@
  */
 export class NamedRouting {
   /**Adds a router or outlet to the registry */
-  static addNamedItem(name, item) {
+  static async addNamedItem(name, item) {
     if (item === undefined) {
       item = name;
       name = '';
@@ -41,7 +42,7 @@ export class NamedRouting {
       let assignment = NamedRouting.getAssignment(name);
 
       if (assignment && item.canLeave(assignment.url)) {
-        item.processNamedUrl(assignment.url)
+        await item.processNamedUrl(assignment.url);
       }
     }
   }
@@ -73,8 +74,13 @@ export class NamedRouting {
     return NamedRouting.assignments[name];
   }
 
-  /**Add an assignment to the registry. Will override an assignement if one already exists with the same name. */
-  static addAssignment(name, url) {
+  /**
+   * Add an assignment to the registry. Will override an assignement if one already exists with the same name.
+   * @param {string} name the name of the named item to target with the assignment
+   * @param {string} url to assign to the named item
+   * @returns {Promise<import('./routes-route').Match|boolean>} when assignment is completed. false is returned if the assignment was cancelled for some reason.
+   */
+  static async addAssignment(name, url) {
     let lastAssignment = NamedRouting.assignments[name];
     NamedRouting.assignments[name] = {name, url};
     let namedItem = NamedRouting.getNamedItem(name);
@@ -84,7 +90,7 @@ export class NamedRouting {
         return false;
       }
 
-      namedItem.processNamedUrl(url);
+      await namedItem.processNamedUrl(url);
     }
   }
 
@@ -118,11 +124,11 @@ export class NamedRouting {
 
   /**
    * Parses a URL section and tries to get a named item from it.
-   * @param {string} url
+   * @param {string} url containing the assignment and the named item
    * @param {boolean} [supressAdding]
-   * @returns {object} null if not able to parse
+   * @returns {Promise<NamedMatch|null>} null if not able to parse. If we are adding the named item then the promise is resolved when item is added and any routing has taken place.
    */
-  static parseNamedItem(url, supressAdding) {
+  static async parseNamedItem(url, supressAdding) {
     if (url[0] === '/') {
       url = url.substr(1);
     }
@@ -137,7 +143,7 @@ export class NamedRouting {
       let urlEscaped = match[2].replace(/_dot_/g, '.');
       let routeCancelled = false;
       if (supressAdding !== true) {
-        if(NamedRouting.addAssignment(match[1], urlEscaped) === false) {
+        if((await NamedRouting.addAssignment(match[1], urlEscaped)) === false) {
           routeCancelled = true;
         }
       }
@@ -250,10 +256,12 @@ export class NamedRouting {
   /**
    * Prefetches an import module so that it is available when the link is activated
    * @param {NamedMatch} namedAssignment item assignment
+   * @returns {Promise} resolves when the import is completed
    */
-  static prefetchNamedOutletImports(namedAssignment) {
+  static async prefetchNamedOutletImports(namedAssignment) {
     if (namedAssignment.namedOutlet && namedAssignment.namedOutlet.options && namedAssignment.namedOutlet.options.import) {
-      NamedRouting.pageReady().then(() => NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import, namedAssignment.namedOutlet.elementTag));
+      await NamedRouting.pageReady();
+      await NamedRouting.importCustomElement(namedAssignment.namedOutlet.options.import, namedAssignment.namedOutlet.elementTag);
     }
   }
 
@@ -262,8 +270,9 @@ export class NamedRouting {
    * @param {string} importSrc 
    * @param {string} tagName 
    */
-  static prefetchImport(importSrc, tagName) {
-    NamedRouting.pageReady().then(() => NamedRouting.importCustomElement(importSrc, tagName));
+  static async prefetchImport(importSrc, tagName) {
+    await NamedRouting.pageReady();
+    await NamedRouting.importCustomElement(importSrc, tagName);
   }
 
   /**

@@ -1,6 +1,15 @@
 ///@ts-check
 import { NamedRouting } from "./named-routing.js";
 
+/**
+   * @typedef {Object} Match
+   * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
+   * @property {string} remainder - If the route performed a partial match, the remainder of the URL that was not atched is stored in this property.
+   * @property {Object} data - Any data found and matched in the URL.
+   * @property {?string} redirect - A URL to redirect to.
+   * @property {boolean} useCache - Indicator as to wether the current HTML content can be reused.
+   */
+
 export class RouteElement extends HTMLElement {
 
   connectedCallback(){
@@ -12,17 +21,15 @@ export class RouteElement extends HTMLElement {
     }
 
     if (this.isConnected) {
-      // var childrenReady = (mutationList, observer) => {
-      //   observer.disconnect();
-      //   this.parentNode.addRoute && this.parentNode.addRoute(this);
-      // };
-      // var observer = new MutationObserver(childrenReady);
-      // observer.observe(this, { attributes: false, childList: true, subtree: true });
+      this.dispatchEvent(new CustomEvent('onRouteAdded', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          route: this
+        }
+      }));
 
-      var initMatch = function(){this.parentNode && this.parentNode.addRoute && this.parentNode.addRoute(this);};
-      setTimeout(initMatch.bind(this), 0);
-
-      if (this.hasAttribute('lazyload') && this.getAttribute('lazyload').toLowerCase() !== 'true') {
+      if (!this.hasAttribute('lazyload') || this.getAttribute('lazyload').toLowerCase() !== 'true') {
         let importAttr = this.getAttribute('import');
         let tagName = this.getAttribute('element');
         NamedRouting.prefetchImport(importAttr, tagName);
@@ -31,7 +38,7 @@ export class RouteElement extends HTMLElement {
   }
 
   disconnectedCallback() {
-    this.parentNode && this.parentNode.isConnected && this.parentNode.removeRoute(this);
+    
   }
 
   constructor() {
@@ -45,15 +52,6 @@ export class RouteElement extends HTMLElement {
   }
 
   /**
-   * @typedef {Object} Match
-   * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
-   * @property {string} remainder - If the route performed a partial match, the remainder of the URL that was not atched is stored in this property.
-   * @property {Object} data - Any data found and matched in the URL.
-   * @property {string} redirect - A URL to redirect to.
-   * @property {boolean} useCache - Indicator as to wether the current HTML content can be reused.
-   */
-
-  /**
    * Performs matching and partial matching. In order to successfully match, a RouteElement elements path attribute must match from the start of the URL. A full match would completely match the URL. A partial match would return from the start.
    * @fires RouteElement#onROuteMatch
    * @param {string} url - The url to perform matching against
@@ -64,31 +62,26 @@ export class RouteElement extends HTMLElement {
 
     const path = this.getAttribute('path');
     if (!path) {
-      console.log("route must contain a path");
+      console.info("route must contain a path");
       throw 'Route has no path defined. Add a path attribute to route';
     } 
 
     let match = null;
+    let fullMatch = {
+      url: url,
+      remainder: '',
+      data: null,
+      redirect: null,
+      useCache: false
+    };
 
     if (path === '*') {
-      match =  {
-        url: url,
-        remainder: '',
-        data: null,
-        redirect: null,
-        useCache: false
-      };
+      match = fullMatch;
     } else if (path === url) {
-      match = {
-        url: url,
-        remainder: '',
-        data: null,
-        redirect: null,
-        useCache: false
-      };
+      match = fullMatch;
     } else {
       const pathSegments = this._createPathSegments(path);
-      //console.log(urlSegments, pathSegments);
+      //console.info(urlSegments, pathSegments);
       const data = new Map();
 
       let max = Math.max(urlSegments.length, pathSegments.length);
@@ -107,33 +100,24 @@ export class RouteElement extends HTMLElement {
             data.set(param, decodeURIComponent(val));
             if (plus || star) {
               data.set(param, urlSegments.slice(i).map(decodeURIComponent).join('/'));
-              match = {
-                url: url,
-                remainder: '',
-                data: data
-              };
+              match = match || fullMatch;
+              match.data = data;
               break;
             }
         }
         else if (pathSegments[i] !== urlSegments[i]) {
           if (i > 0 && !this.hasAttribute('fullmatch')) {
-            match = {
-              url: urlSegments.slice(0, i).join('/'),
-              remainder: urlSegments.slice(i).join('/'),
-              data: data
-            }
+            match = match || fullMatch;
+            match.data = data;
+            match.url = urlSegments.slice(0, i).join('/');
+            match.remainder = urlSegments.slice(i).join('/');
           }
           break;
         }
         
         if (i === max - 1) {
-          match = {
-            url: url,
-            remainder: '',
-            data: data,
-            redirect: null,
-            useCache: false
-          }
+          match = match || fullMatch;
+          match.data = data;
         }
       }
     }
