@@ -27,7 +27,7 @@ Then enter this url in the browser:
     npm i a-wc-router
 
 # Usage
-## Using HTML
+## With HTML
 
     <!DOCTYPE html>
     <html>
@@ -48,7 +48,7 @@ Then enter this url in the browser:
         </body>
     </html>
     
-## Using Custom Element
+## With Custom Element
 
     import '../node_modules/a-wc-router/build/es6-bundled/src/router.js';
     import './my-page1.js';
@@ -140,7 +140,7 @@ Routing only takes place if a url also matches the document.baseURI.
     <a href='/user'>Wont route</a>
     <a href='/MyAppRoot/user'>Will route</a>
 
-# Named outlets (no router of routes requried)
+# Named outlets (no router or routes requried)
 ## Routing using named outlets and HTML anchors
     
     <an-outlet name="main">Please click a link</an-outlet>
@@ -208,7 +208,6 @@ Routing only takes place if a url also matches the document.baseURI.
 ### onOutletUpdated
 
 ## Testing
-To run tests, install polymer cli.
-    polymer serve
-And navigate to:
-    http://127.0.0.1:8081/components/a-wc-router/test/unit
+To run tests:
+
+    npm test

@@ -1,16 +1,13 @@
-// import '../../node_modules/mocha/mocha.js'
-// import '../../node_modules/chai/register-expect.js';
 import { NamedRouting } from '../../src/named-routing.js'
 import { RouterElement } from '../../src/routes-router.js'
-import { RouteElement } from '../../src/routes-route'
-import '../../src/routes-outlet'
+import '../../src/routes-route.js'
+import '../../src/routes-outlet.js'
 
 class End2EndElement extends HTMLElement {
 
     connectedCallback() {
         if (this.isConnected) {
             this.render();
-            setTimeout(this.runTests.bind(this), 0);
         }
     }
 
@@ -20,33 +17,26 @@ class End2EndElement extends HTMLElement {
 
     render() {
         this.innerHTML = `
-        <a href="/components/a-wc-router/test/unit/index.html" onclick="setTimeout(() => window.location.reload(true), 0)">Rerun</a>
-        <div id="mocha">
-          <p><a href=".">Index</a></p>
-        </div>
-        <div id="messages"></div>
-        <div id="fixtures"></div>
-      
         <!-- Test set up -->
         <an-outlet name="myoutlet1" id="myoutlet1"></an-outlet>
         <a-router id="router-a">
           <an-outlet id="outletA"></an-outlet>
           <a-route path="/template" id="template-route"><template>Hello Template</template></a-route>
           <a-route path="/template"><template>Only hit if template route cancelled</template></a-route>
-          <a-route path="/webcomponent" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
           <a-route path="/nested">
             <template>
               <p>Content with nested router</p>
               <a-router name="router-a-b">
                 <an-outlet id="outletB"></an-outlet>
                 <a-route path="/template_nested"><template>Hello Nested</template></a-route>
-                <a-route path="/webcomponent_nested" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
+                <a-route path="/webcomponent_nested" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
                 <a-route path="/nested2/:param1">
                   <template>
                     <p>Nested router with data</p>
                     <a-router>
                       <an-outlet id="outletC"></an-outlet>
-                      <a-route id="route-nested-component" path="/webcomponent-data2/:requiredParam" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
+                      <a-route id="route-nested-component" path="/webcomponent-data2/:requiredParam" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
                     </a-route>
                   </template>
                 </a-route>
@@ -54,11 +44,11 @@ class End2EndElement extends HTMLElement {
               </a-route>
             </template>
           </a-route>
-          <a-route path="/webcomponent-data1/:requiredParam" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data2/:optionalParam?" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data3/:atLeastOneParam+" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data4/:anyNumOfParam*" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
-          <a-route path="/webcomponent-data5/:firstParam/:secondParam" import='/components/a-wc-router/test/unit/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data1/:requiredParam" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data2/:optionalParam?" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data3/:atLeastOneParam+" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data4/:anyNumOfParam*" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data5/:firstParam/:secondParam" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
           <a-route id="catch-all" path='*'><template>catach all - NotFound2</template></a-route>
         </a-router>
       
@@ -110,224 +100,227 @@ class End2EndElement extends HTMLElement {
         </template>
         `;
     }
+}
 
-    runTests() {
-        mocha.setup('bdd');
-        let expect = chai.expect;
-        let outlet = document.getElementById('outletA');
+window.customElements.define('end-to-end', End2EndElement);
+    const baseUrl = document.createElement('base');
+    baseUrl.setAttribute('href', '/myapp/');
+    document.head.appendChild(baseUrl);
+    let outlet = document.getElementById('outletA');
+    document.body.appendChild(document.createElement('end-to-end'));
 
-        let fireNavigate = function(link) {
-            let navigateEvent = new CustomEvent('navigate', {
-                detail: {
-                    href: link
-                }
-            });
-            window.dispatchEvent(navigateEvent);
-            return navigateEvent;
-        }
-
-        var click = function(href) {
-            let link = href.href || href;
-            let removeLink = false;
-            if (href instanceof HTMLAnchorElement === false) {
-                link = document.createElement('A');
-                link.href = href.href || href;
-                document.body.appendChild(link);
-                removeLink = true;
+    let fireNavigate = function(link) {
+        let navigateEvent = new CustomEvent('navigate', {
+            detail: {
+                href: link
             }
+        });
+        window.dispatchEvent(navigateEvent);
+        return navigateEvent;
+    }
 
-            let navEvent = fireNavigate(link);
-            console.info(navEvent.detail.onNavigated, link.href);
-            return navEvent.detail.onNavigated.then(() => {
-                removeLink && link.remove();
-                return navEvent.detail.onNavigated;
-            });
+    let click = function(href) {
+        let link = href instanceof HTMLAnchorElement ? href : undefined;
+        let removeLink = false;
+        if (!link) {
+            link = document.createElement('A');
+            link.href = href.href || href;
+            document.body.appendChild(link);
+            removeLink = true;
         }
+        let navEvent = fireNavigate(link);
+        console.info(navEvent.detail.onNavigated, link.href, link);
+        return navEvent.detail.onNavigated.then(() => {
+            removeLink && link.remove();
+            return navEvent.detail.onNavigated;
+        });
+    }
 
-        var clickAndTest = function (linkDetails, expectedTextOrHtmlContent, outletId) {
-            outletId = outletId || 'outletA';
-            console.group('test: ' + linkDetails.href)
-            
-            let callback = function (event) {
-                document.body.removeEventListener("onOutletUpdated", callback);
-                console.info('callback for ' + linkDetails.href);
-                console.info('outlet updated: ' + event.target.id + '-----' + event.target.innerText);
-                if (!outletId || outletId === event.target.id) {
-                    if (expectedTextOrHtmlContent instanceof Function)
-                        expectedTextOrHtmlContent(event.target);
-                    else
-                        expect(event.target.innerHTML).to.contains(expectedTextOrHtmlContent);                    
-                }
-            };
-
-            document.body.addEventListener("onOutletUpdated", callback);
-
-            return click(linkDetails).then((event) => {
-                document.body.removeEventListener("onOutletUpdated", callback);
-                console.info('call done for ' + linkDetails.href);
-                console.groupEnd();
-            });
+    let clickAndTest = function (linkDetails, expectedTextOrHtmlContent, outletId) {
+        outletId = outletId || 'outletA';
+        console.group('test: ' + linkDetails.href)
+        
+        let callback = function (event) {
+            document.body.removeEventListener("onOutletUpdated", callback);
+            console.info('callback for ' + linkDetails.href);
+            console.info('outlet updated: ' + event.target.id + '-----' + event.target.innerText);
+            if (!outletId || outletId === event.target.id) {
+                if (expectedTextOrHtmlContent instanceof Function)
+                    expectedTextOrHtmlContent(event.target);
+                else
+                    expect(event.target.innerHTML).toContain(expectedTextOrHtmlContent);                    
+            }
         };
 
-        var clickAndNotHandle = function(linkDetails, done) {
-            console.group('test: ' + linkDetails.href);
+        document.body.addEventListener("onOutletUpdated", callback);
 
-            let clickCallback = (event) => {
-                window.removeEventListener('click', clickCallback);
-                event.preventDefault();
-            };
-            window.addEventListener('click', clickCallback, false);
-            
-            let notHandled = false;
-            let notHandledCallback = function (event) {
-                notHandled = true;
-            }
-            document.body.addEventListener("onRouteNotHandled", notHandledCallback);
+        return click(linkDetails).then((event) => {
+            document.body.removeEventListener("onOutletUpdated", callback);
+            console.info('call done for ' + linkDetails.href);
+            console.groupEnd();
+        });
+    };
 
-            return click(linkDetails).then(() => {
-                document.body.removeEventListener("onRouteNotHandled", notHandledCallback);
-                expect(notHandled).to.be.true;
-                console.info('route not handled: ' + linkDetails.href);
-                console.info('call done for ' + linkDetails.href);
-                console.groupEnd();
-                done && done();
-            });
+    let clickAndNotHandle = function(linkDetails, done) {
+        console.info('clickAndNotHandle: ' + linkDetails.href);
+        let clickCallback = (event) => {
+            window.removeEventListener('click', clickCallback);
+            event.preventDefault();
         };
+        window.addEventListener('click', clickCallback, false);
+        
+        let notHandled = false;
+        let notHandledCallback = function (event) {
+            notHandled = true;
+        }
+        document.body.addEventListener("onRouteNotHandled", notHandledCallback);
 
-        describe('link state', function() {
-            it('link should be active for routes', function(){
-                let link1 = document.createElement('a');
-                document.body.appendChild(link1);
-                link1.href = 'nested/webcomponent_nested';
-                let link2 = document.createElement('a');
-                document.body.appendChild(link2);
-                link2.href = 'nested2/webcomponent_nested';
-                RouterElement.registerLinks([link1, link2], 'active').then(() => {
-                
-                    let onLinkActiveStatusUpdated = false;
-                    let handler = () => {
-                        onLinkActiveStatusUpdated = true;
-                        window.removeEventListener("onLinkActiveStatusUpdated", handler);
-                    }
+        return click(linkDetails).then(() => {
+            document.body.removeEventListener("onRouteNotHandled", notHandledCallback);
+            expect(notHandled).toBe(true);
+            console.info('route not handled: ' + linkDetails.href);
+            console.info('call done for ' + linkDetails.href);
+            done && done();
+        });
+    };
 
-                    window.addEventListener("onLinkActiveStatusUpdated", handler);
+    describe('link state', function() {
+        it('link should be active for nested routes', async function(){
+            let link1 = document.createElement('a');
+            link1.href = 'nested/webcomponent_nested';
+            document.body.appendChild(link1);
+            
+            let link2 = document.createElement('a');
+            link2.href = 'nested2/webcomponent_nested';
+            document.body.appendChild(link2);
+            debugger;
+            
+            await RouterElement.registerLinks([link1, link2], 'active');
+            
+            let onLinkActiveStatusUpdated = 0;
+            let handler = () => {
+                onLinkActiveStatusUpdated += 1;
+            }
 
-                    return click(link1).then(() => {
-                        console.info('test: ', document.querySelector('.active'));
-                        expect(onLinkActiveStatusUpdated).to.be.true;
-                        expect(link1.className).to.equal('active');
-                        expect(link2.className).to.equal('');
-                        link1.remove();
-                        link2.remove();
-                    });
-                });
-            });
-
-            it('link should be active for named outlet', function(){
-                let link1 = document.createElement('a');
-                document.body.appendChild(link1);
-                link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js))';
-                let link2 = document.createElement('a');
-                document.body.appendChild(link2);
-                link2.href = '(myoutlet:tests-dummy(/components/a-wc-router/test/unit/test-dummy.js))';
-                RouterElement.registerLinks([link1, link2], 'active');
-
-                let linkStatusesUpdate = false;
-                let onLinkActiveStatusUpdatedCallback = function (event) {
-                    linkStatusesUpdate = true;
-                };
-                window.addEventListener("onLinkActiveStatusUpdated", onLinkActiveStatusUpdatedCallback);
-
-                return click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js))" }).then(() => {
-                    window.removeEventListener("onLinkActiveStatusUpdated", onLinkActiveStatusUpdatedCallback);
-                    NamedRouting.removeAssignment('myoutlet1');
-                    expect(linkStatusesUpdate).to.be.true;
-                    expect(link1.className).to.equal('active');
-                    expect(link2.className).to.equal('');
+            window.addEventListener("onLinkActiveStatusUpdated", handler);
+            await click(link1);
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    expect(link1.className).toEqual('active');
+                    expect(link2.className).toEqual('');
                     link1.remove();
                     link2.remove();
-                });
+                    window.removeEventListener("onLinkActiveStatusUpdated", handler);
+                    resolve('foo');
+                }, 100);
+              });
+        });
+
+        it('link should be active for named outlet', function(){
+            let link1 = document.createElement('a');
+            document.body.appendChild(link1);
+            link1.href = '(myoutlet1:test-dummy(/base/test/assets/test-dummy.js))';
+            let link2 = document.createElement('a');
+            document.body.appendChild(link2);
+            link2.href = '(myoutlet:tests-dummy(/base/test/assets/test-dummy.js))';
+            RouterElement.registerLinks([link1, link2], 'active');
+
+            let linkStatusesUpdate = false;
+            let onLinkActiveStatusUpdatedCallback = function (event) {
+                linkStatusesUpdate = true;
+            };
+            window.addEventListener("onLinkActiveStatusUpdated", onLinkActiveStatusUpdatedCallback);
+
+            return click({ href: "(myoutlet1:test-dummy(/base/test/assets/test-dummy.js))" }).then(() => {
+                window.removeEventListener("onLinkActiveStatusUpdated", onLinkActiveStatusUpdatedCallback);
+                NamedRouting.removeAssignment('myoutlet1');
+                expect(linkStatusesUpdate).toBe(true);
+                expect(link1.className).toEqual('active');
+                expect(link2.className).toEqual('');
+                link1.remove();
+                link2.remove();
             });
+        });
 
-            it('link should be active for named outlet with data', function(){
-                let link1 = document.createElement('a');
-                document.body.appendChild(link1);
-                link1.href = '(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js):param1=value1)';
-                let link2 = document.createElement('a');
-                document.body.appendChild(link2);
-                link2.href = '(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js)):param1=value2';
-                let link3 = document.createElement('a');
-                document.body.appendChild(link3);
-                link3.href = '(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js))';
-                RouterElement.registerLinks([link1, link2, link3], 'active');
+        it('link should be active for named outlet with data', function(){
+            let link1 = document.createElement('a');
+            document.body.appendChild(link1);
+            link1.href = '(myoutlet1:test-dummy(/base/test/assets/test-dummy.js):param1=value1)';
+            let link2 = document.createElement('a');
+            document.body.appendChild(link2);
+            link2.href = '(myoutlet1:test-dummy(/base/test/assets/test-dummy.js)):param1=value2';
+            let link3 = document.createElement('a');
+            document.body.appendChild(link3);
+            link3.href = '(myoutlet1:test-dummy(/base/test/assets/test-dummy.js))';
+            RouterElement.registerLinks([link1, link2, link3], 'active');
 
-                let linkStatusesUpdate = false;
-                let outletUpdateCallback = function (event) {
-                    linkStatusesUpdate = true;
-                };
-                window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+            let linkStatusesUpdate = false;
+            let outletUpdateCallback = function (event) {
+                linkStatusesUpdate = true;
+            };
+            window.addEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
 
-                return click({ href: "(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js):param1=value1)" }).then(() => {
-                    window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
-                    NamedRouting.removeAssignment('myoutlet1');
-                    expect(linkStatusesUpdate).to.be.true;
-                    expect(link1.className).to.equal('active');
-                    expect(link2.className).to.equal('');
-                    expect(link3.className).to.equal('active');
+            return click({ href: "(myoutlet1:test-dummy(/base/test/assets/test-dummy.js):param1=value1)" }).then(() => {
+                window.removeEventListener("onLinkActiveStatusUpdated", outletUpdateCallback);
+                NamedRouting.removeAssignment('myoutlet1');
+                expect(linkStatusesUpdate).toBe(true);
+                expect(link1.className).toEqual('active');
+                expect(link2.className).toEqual('');
+                expect(link3.className).toEqual('active');
+                link1.remove();
+                link2.remove();
+                link3.remove();
+            });
+        });
+
+        it('link should be active for named routes', function(){
+            let link1 = document.createElement('a');
+            document.body.appendChild(link1);
+            link1.href = '(router-a-b:template2_nested)';
+            let link2 = document.createElement('a');
+            document.body.appendChild(link2);
+            link2.href = '(router-a-b:template_nested)';
+            RouterElement.registerLinks([link1, link2], 'active');
+            return click({ href: "nested/webcomponent_nested" }, 'outletB').then(() => {
+                return clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested').then(() => {
+                    NamedRouting.removeAssignment('router-a-b');
+                    expect(link1.className).toEqual('');
+                    expect(link2.className).toEqual('active');
                     link1.remove();
                     link2.remove();
-                    link3.remove();
-                });
+                })
             });
+        });
+    });
 
-            it('link should be active for named routes', function(){
-                let link1 = document.createElement('a');
-                document.body.appendChild(link1);
-                link1.href = '(router-a-b:template2_nested)';
-                let link2 = document.createElement('a');
-                document.body.appendChild(link2);
-                link2.href = '(router-a-b:template_nested)';
-                RouterElement.registerLinks([link1, link2], 'active');
-                return click({ href: "nested/webcomponent_nested" }, 'outletB').then(() => {
-                    return clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested').then(() => {
-                        NamedRouting.removeAssignment('router-a-b');
-                        expect(link1.className).to.equal('');
-                        expect(link2.className).to.equal('active');
-                        link1.remove();
-                        link2.remove();
-                    })
-                });
+    describe('named outlets', function() {
+        it('should show named outlet', function() {
+            return click({ href: '(myoutlet1:test-dummy(/base/test/assets/test-dummy.js))'}).then(() => {
+                let content = document.querySelector("[name='myoutlet1']").innerHTML;
+                expect(content).toContain('test-dummy');
             });
         });
 
-        describe('named outlets', function() {
-            it('should show named outlet', function() {
-                return click({ href: '(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js))'}).then(() => {
-                    let content = document.querySelector("[name='myoutlet1']").innerHTML;
-                    expect(content).to.contain('test-dummy');
-                });
-            });
-
-            it('updates for clicked links', function() {
-                return clickAndTest({ href: "(myoutlet1:test-dummy(/components/a-wc-router/test/unit/test-dummy.js):requiredParam=named outlet,testing)" }, 'Test Element named outlet,testing', 'myoutlet1');
-            });
-
-            it('should support convention based importing', function() {
-                return clickAndTest({ href: "(myoutlet1:/components/a-wc-router/test/unit/test-dummy-two)" }, 'Test Element Two', 'myoutlet1');
-            });
+        it('updates for clicked links', function() {
+            return clickAndTest({ href: "(myoutlet1:test-dummy(/base/test/assets/test-dummy.js):requiredParam=named outlet,testing)" }, 'Test Element named outlet,testing', 'myoutlet1');
         });
 
-        describe('named routers', function() {
-            it('updates for clicked links', function() {
-                return click({ href: "nested/webcomponent_nested" }).then(() => {
-                    clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', 'outletB').then(() => {
-                        NamedRouting.removeAssignment('router-a-b');
-                    })
-                });
+        it('should support convention based importing', function() {
+            return clickAndTest({ href: "(myoutlet1:/base/test/assets/test-dummy-two)" }, 'Test Element Two', 'myoutlet1');
+        });
+    });
+
+    describe('named routers', function() {
+        it('updates for clicked links', function() {
+            return click({ href: "nested/webcomponent_nested" }).then(() => {
+                clickAndTest({ href: "(router-a-b:template_nested)" }, 'Hello Nested', 'outletB').then(() => {
+                    NamedRouting.removeAssignment('router-a-b');
+                })
             });
         });
+    });
 
-        describe('routes-router', function () {
+    describe('routes-router', function () {
         describe('simple flat', () => {
             it('template based route works', (done) => {
                 clickAndTest({ href: "template" }, 'Hello Template').then(() => done());
@@ -357,40 +350,39 @@ class End2EndElement extends HTMLElement {
             //   clickAndTest(
             //     { href: "exception" },
             //     (outlet) => {
-            //       expect(outlet.innerHTML).to.contain('404');
+            //       expect(outlet.innerHTML).toContain('404');
             //       route.setAttribute('path', '*');
             //     },
             //     done);
             // });
 
-            it('shouldn\'t handle different base urls', function (done) {
-                clickAndNotHandle({ href: "/template" }).then(() => done());
+            it('absolute path should match', function (done) {
+                clickAndTest({ href: "/myapp/template" }, 'Hello Template').then(() => done());
             });
 
-            it('absolute path should match', function (done) {
-                clickAndTest({ href: "/components/a-wc-router/test/unit/template" }, 'Hello Template').then(() => done());
+            it('shouldn\'t handle different base urls', function () {
+                return clickAndNotHandle({ href: "/myotherapp/template" });
             });
         });
 
         describe('auxiliary routing', function(){
-            it('Should route auxiliary', function(done) {
+            it('Should route auxiliary', async function() {
                 let routerA = document.getElementById('router-a');
                 let auxiliaryRouting = document.getElementById('auxiliary-routing').content.cloneNode(true);
                 let i = 2;
                 auxiliaryRouting = routerA.parentNode.insertBefore(auxiliaryRouting, routerA.nextSibling);
-                click({ href: "(template)::main/(main_view1/10::main2_view1/99)::secondary/(sec_view1/54::secondary2_view1/43)" }).then(() => {
-                        expect(document.getElementById('router-a').innerText)
-                            .to.contain('Hello Template');
-                        let routerB = document.getElementById('routerb');
-                        expect(routerB.innerText)
-                            .to.contain('Main View 1 Main2 View 1');
-                        let routerC = document.getElementById('routerc');
-                        expect(routerC.innerText)
-                            .to.contain('Sec View 1 Sec2 View 1');
-                        routerB.parentNode.removeChild(routerB);
-                        routerC.parentNode.removeChild(routerC);
-                        done();
-                    });
+                await click({ href: "(template)::main/(main_view1/10::main2_view1/99)::secondary/(sec_view1/54::secondary2_view1/43)" }).then(() => {
+                    expect(document.getElementById('router-a').innerText)
+                        .toContain('Hello Template');
+                    let routerB = document.getElementById('routerb');
+                    expect(routerB.innerText)
+                        .toContain('Main View 1 Main2 View 1');
+                    let routerC = document.getElementById('routerc');
+                    expect(routerC.innerText)
+                        .toContain('Sec View 1 Sec2 View 1');
+                    routerB.parentNode.removeChild(routerB);
+                    routerC.parentNode.removeChild(routerC);
+                });
             });
         });
         
@@ -448,7 +440,7 @@ class End2EndElement extends HTMLElement {
                     (outlet) => outlet.setAttribute('test', '123'),
                     'outletC').then(() => clickAndTest(
                         { href: 'nested/nested2/value1/webcomponent-data2/value2' },
-                        (outlet) => expect(outlet.getAttribute('test')).to.equal('123'),
+                        (outlet) => expect(outlet.getAttribute('test')).toEqual('123'),
                         'outletC')).then(() => done());
             });
 
@@ -524,18 +516,12 @@ class End2EndElement extends HTMLElement {
         //     clickAndTest({ href: 'nested/template_nested' }, 'Hello Nested');
         //   });
         // });
-        });
+    });
 
-        describe('routes-route', function () {
+    describe('routes-route', function () {
         describe('route matching', function () {
             // it('full matches', function () {
 
             // });
         });
-        });
-
-        mocha.run();
-    }
-}
-
-window.customElements.define('end-to-end', End2EndElement);
+    });
