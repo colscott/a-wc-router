@@ -137,6 +137,24 @@ export class RouterElement extends HTMLElement {
   }
 
   /**
+   * Clears all current match information for all available routers.
+   * This initializes ready for the next matching.
+   */
+  static prepareRoutersForDispatch(routers) {
+    routers = routers || RouterElement._routers;
+    if (routers) {
+      for (let i = 0, iLen = routers.length; i < iLen; i++) {
+        let router = routers[i];
+        
+        router.clearCurrentMatch();
+
+        let childRouters = router._routers;
+        this.prepareRoutersForDispatch(childRouters);
+      }
+    }
+  }
+
+  /**
    * Common entry point that starts the routing process.
    * @param {string} url
    * @param {boolean} [skipHistory]
@@ -171,13 +189,16 @@ export class RouterElement extends HTMLElement {
 
     RouterElement._activeRouters = [];
 
+    this.prepareRoutersForDispatch();
+
     if (await RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
-      await RouterElement.updateHistory(url);
+      RouterElement.updateHistory(url);
+      RouterElement.updateAnchorsStatus();
     }
   }
 
   /** Updates the location history with the new href */
-  static async updateHistory(href) {
+  static updateHistory(href) {
     let urlState = RouterElement.getUrlState();
     let url = urlState;
 
@@ -199,8 +220,6 @@ export class RouterElement extends HTMLElement {
     } else {
       window.history.pushState({}, '', fullNewUrl);
     }
-
-    await RouterElement.updateAnchorsStatus(urlState);
   }
 
   /**
@@ -298,17 +317,26 @@ export class RouterElement extends HTMLElement {
   }
 
   /** Gets the current URL state based on currently active routers and outlets. */
-  static getUrlState() {
+  static getUrlState(routers) {
     let url = NamedRouting.generateNamedItemsUrl();
-
-    if (RouterElement._routers) {
-      for (let i = 0, iLen = RouterElement._routers.length; i < iLen; i++) {
-        var nextFrag = RouterElement._routers[i].generateUrlFragment();
+    routers = routers || RouterElement._routers;
+    if (routers) {
+      for (let i = 0, iLen = routers.length; i < iLen; i++) {
+        let router = routers[i];
+        var nextFrag = router.generateUrlFragment();
         if (nextFrag) {
           if (url.length) {
             url += '::';
           }
           url += nextFrag;
+          let childRouters = router._routers;
+          if (childRouters && childRouters.length) {
+            if (childRouters.length === 1) {
+              url += ('/' + this.getUrlState(childRouters));
+            } else {
+              url += ('/(' + this.getUrlState(childRouters) + ')');
+            }
+          }
         }
       }
     }
@@ -349,6 +377,7 @@ export class RouterElement extends HTMLElement {
         await router.performMatchOnRouter(urlsWithoutNamedOutlets[i] || '');
       }
     }
+    RouterElement.updateAnchorsStatus();
     return true;
   }
 
@@ -586,6 +615,10 @@ export class RouterElement extends HTMLElement {
     return this._currentMatch;
   }
 
+  clearCurrentMatch() {
+    this._currentMatch = null;
+  }
+
   /** 
    * Event handler for handling when child route is added.
    * Used to link up RouterElements with child RouteElements even through Shadow DOM.
@@ -611,8 +644,6 @@ export class RouterElement extends HTMLElement {
         if(currentMatch.remainder) {
             await this.performMatchOnRoute(currentMatch.remainder, routeElement);
         }
-      } else {
-        await this.performMatchOnRoute(RouterElement._route.url, routeElement);
       }
     }
   }
@@ -689,6 +720,7 @@ export class RouterElement extends HTMLElement {
 
     let match = routeElement.match(url) || null;
     if (match != null) {
+      this.postProcessMatch();
       if (match.redirect) {
         // TODO If the route being redirected to comes after then it might not have loaded yet
         return await this.performMatchOnRouter(match.redirect)
@@ -709,8 +741,6 @@ export class RouterElement extends HTMLElement {
       if (this._routers && match.remainder) {
         await RouterElement.performMatchOnRouters(match.remainder, this._routers);
       }
-
-      this.postProcessMatch();
     }
     return match;
   }

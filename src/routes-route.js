@@ -21,13 +21,16 @@ export class RouteElement extends HTMLElement {
     }
 
     if (this.isConnected) {
-      this.dispatchEvent(new CustomEvent('onRouteAdded', {
+
+      let onRouteAdded = new CustomEvent('onRouteAdded', {
         bubbles: true,
         composed: true,
         detail: {
           route: this
         }
-      }));
+      });
+
+      this.dispatchEvent(onRouteAdded);
 
       if (!this.hasAttribute('lazyload') || this.getAttribute('lazyload').toLowerCase() !== 'true') {
         let importAttr = this.getAttribute('import');
