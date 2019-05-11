@@ -238,7 +238,7 @@ export class RouterElement extends HTMLElement {
       if (currentAnchors[i].a.isConnected === true) {
         let link = currentAnchors[i];
         nextAnchors[nextAnchors.length] = link;
-        link.a.classList.remove(link.a.activeClassName || 'active');
+        link.a.classList.remove(link.a.getAttribute('activeclassname') || link.a.activeClassName || 'active');
       }
     }
 
@@ -250,7 +250,7 @@ export class RouterElement extends HTMLElement {
       nextLink:
       for (let i = 0, iLen = nextAnchors.length; i < iLen; i++) {
         let link = nextAnchors[i];
-        if (link && link.a.classList.contains(link.a.activeClassName || 'active')) {
+        if (link && link.a.classList.contains(link.a.getAttribute('activeclassname') || link.a.activeClassName || 'active')) {
           continue nextLink;
         }
         if (link) {
@@ -263,14 +263,14 @@ export class RouterElement extends HTMLElement {
                   // TODO strip import out of both before compare
                   if (named[k].url == urlFragNamedItemMatch.urlEscaped) {
                     // full match on named item
-                    link.a.classList.add(link.a.activeClassName || 'active');
+                    link.a.classList.add(link.a.getAttribute('activeclassname') || link.a.activeClassName || 'active');
                     link = null;
                     continue nextLink;
                   } else 
                   //Check if it's a mtch upto data portion of url
                   if (urlFragNamedItemMatch.urlEscaped.indexOf(named[k].url) === 0) {
                     // full match on named item
-                    link.a.classList.add(link.a.activeClassName || 'active');
+                    link.a.classList.add(link.a.getAttribute('activeclassname') || link.a.activeClassName || 'active');
                     link = null;
                     continue nextLink;
                   }
@@ -283,12 +283,12 @@ export class RouterElement extends HTMLElement {
 
               if (urlFragment == routeUrl) {
                 // full match on route
-                link.a.classList.add(link.a.activeClassName || 'active');
+                link.a.classList.add(link.a.getAttribute('activeclassname') || link.a.activeClassName || 'active');
                 link = null;
                 continue nextLink;
               } else if (urlFragment.indexOf(routeUrl) === 0) {
                 // partial match on route
-                link.a.classList.add(link.a.activeClassName || 'active');
+                link.a.classList.add(link.a.getAttribute('activeclassname') || link.a.activeClassName || 'active');
                 link = null;
                 continue nextLink;
               }
@@ -316,7 +316,10 @@ export class RouterElement extends HTMLElement {
     return null;
   }
 
-  /** Gets the current URL state based on currently active routers and outlets. */
+  /**
+   * Gets the current URL state based on currently active routers and outlets.
+   * @param {RouterElement[]} [routers]
+   */
   static getUrlState(routers) {
     let url = NamedRouting.generateNamedItemsUrl();
     routers = routers || RouterElement._routers;
@@ -428,11 +431,15 @@ export class RouterElement extends HTMLElement {
 
     // Add the new anchors
     for (let i = 0, iLen = links.length; i < iLen; i++) {
-      if (links[i].href) {
-        let matches = await RouterElement.sanitizeLinkHref(links[i]);
+      const link = links[i];
+      if (link.href) {
+        let matches = await RouterElement.sanitizeLinkHref(link);
         if (matches) {
+          if (activeClassName && !link.hasAttribute('activeclassname')) {
+            link.setAttribute('activeclassname', activeClassName);
+          }
           newAnchors[newAnchors.length] = {
-            a: links[i],
+            a: link,
             activeClassName: activeClassName,
             routerMatches: matches
           };
