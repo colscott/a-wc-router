@@ -282,7 +282,7 @@ export class NamedRouting {
    */
   static async importCustomElement(importSrc, tagName) {
     if (importSrc && customElements.get(tagName) === undefined) {
-      await import(importSrc);
+      await import(/* webpackIgnore: true */importSrc);
     }
   }
 

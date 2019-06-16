@@ -2,7 +2,7 @@
 import { NamedRouting } from './named-routing.js'
 
 export class RouterElement extends HTMLElement {
-  /** 
+  /**
    * Event handler for handling when child router is added.
    * This function is called in the scope of RouterElement for the top level collection of routers and instacnes of RotuerElement for nested router collections.
    * Used to link up RouterElements with child RouterElements even through Shadow DOM.
@@ -421,7 +421,7 @@ export class RouterElement extends HTMLElement {
   /**
    * Registers HTMLAnchorElements so that they become candidates route status styling.
    * @param {HTMLAnchorElement[]} links 
-   * @param {string} activeClassName 
+   * @param {string} [activeClassName]
    */
   static async registerLinks(links, activeClassName) {
     // console.info('registerLinks');
@@ -440,7 +440,6 @@ export class RouterElement extends HTMLElement {
           }
           newAnchors[newAnchors.length] = {
             a: link,
-            activeClassName: activeClassName,
             routerMatches: matches
           };
           for (let j = 0, jLen = matches.named.length; j < jLen; j++) {
@@ -976,7 +975,7 @@ export class RouterElement extends HTMLElement {
   }
 
   static baseUrlSansHost() {
-    let host = window.location.protocol + '//' + window.location.host;
+    const host = window.location.protocol + '//' + window.location.host;
     return document.baseURI.substr(host.length+1);
   }
 
