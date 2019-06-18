@@ -191,7 +191,16 @@ export class RouterElement extends HTMLElement {
 
     this.prepareRoutersForDispatch();
 
-    if (await RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
+    if (RouterElement._routers.length === 0) {
+      this._currentMatch = {
+        remainder: shortUrl,
+        data: null,
+        redirect: null,
+        url: '',
+        useCache: false
+      };
+      this.hasMatch = false;
+    } else if (await RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
       RouterElement.updateHistory(url);
       RouterElement.updateAnchorsStatus();
     }
