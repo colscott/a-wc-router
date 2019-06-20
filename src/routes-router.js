@@ -213,6 +213,8 @@ export class RouterElement extends HTMLElement {
 
     if (url.length === 2) {
       url = href;
+    } else if (url === '/') {
+      url = document.baseURI;
     } else {
       url = document.baseURI + url;
     }
@@ -394,6 +396,10 @@ export class RouterElement extends HTMLElement {
   }
 
   static splitUrlIntoRouters(url) {
+    if (url === '/') {
+      return ['/'];
+    }
+
     var urls = [];
     var skip = 0;
     for (var i = 0, lastI = i, iLen = url.length; i < iLen; i++) {
