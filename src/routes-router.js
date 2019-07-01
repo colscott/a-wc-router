@@ -330,6 +330,7 @@ export class RouterElement extends HTMLElement {
   /**
    * Gets the current URL state based on currently active routers and outlets.
    * @param {RouterElement[]} [routers]
+   * @returns {string} url state representation of the routers passed in
    */
   static getUrlState(routers) {
     let url = NamedRouting.generateNamedItemsUrl();
@@ -395,6 +396,10 @@ export class RouterElement extends HTMLElement {
     return true;
   }
 
+  /** A URL can represent the state of multiplr routers on the page. This function will parse a url into sub urls for each router.
+   * @param {string} url - The url to parse into multple router parts
+   * @returns {Array<string>} Each entry in the array is the url for a router.
+   */
   static splitUrlIntoRouters(url) {
     if (url === '/') {
       return ['/'];
@@ -469,6 +474,7 @@ export class RouterElement extends HTMLElement {
     RouterElement.updateAnchorsStatus(undefined, newAnchors);
   }
 
+  /** */
   static removeDisconnectedAnchors() {
     const currentAnchors = RouterElement._anchors;
     const nextAnchors = [];
