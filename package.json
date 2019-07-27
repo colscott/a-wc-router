@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "polymer build",
-    "start": "polymer serve",
+    "start": "node exampleServer",
     "dist": "uglifyjs src/named-routing.js src/routes-router.js src/routes-route.js src/routes-outlet.js src/routes-link.js -o dist/router.js -c -m",
     "test": "npm run test:unit",
     "test:unit": "node ./node_modules/karma/bin/karma start karma-unit.conf.js"

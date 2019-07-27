@@ -20,3 +20,5 @@ app.get('/a-wc-router/examples/:example', spaHandler);
 app.get('/a-wc-router/examples/:example/*', spaHandler);
 
 app.listen(process.env.PORT || 3000);
+
+console.log(`server started on: http://localhost:${process.env.PORT || 3000}/a-wc-router/examples/`);

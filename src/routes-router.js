@@ -200,7 +200,8 @@ export class RouterElement extends HTMLElement {
         useCache: false
       };
       this.hasMatch = false;
-    } else if (await RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
+    }
+    if (await RouterElement.performMatchOnRouters(shortUrl, RouterElement._routers) && skipHistory !== true) {
       RouterElement.updateHistory(url);
       RouterElement.updateAnchorsStatus();
     }

@@ -100,7 +100,7 @@ Then enter this url in the browser:
     <a href="user4/12/tom">click for user any number of params</a>
     <a href="user5/12/tom">click for user with two named params</a>
 
-## Code splitting and pre-fetching modules for routes
+## Code splitting and eager loading modules for routes
 
     <a-route path="/user" import="/path-to/user-main.js" element="user-main"></a-route>
 
@@ -154,7 +154,7 @@ Routing only takes place if a url also matches the document.baseURI.
     ....
     <a href="/(main:user-main:userId=2&userName=tom)">Assign <user-main userId="2" userName="tom"> to outlet</a>
 
-## Code splitting and pre-fetching modules for named outlets
+## Code splitting and eager loading modules for named outlets
     
     <an-outlet name="main">Please click a link</an-outlet>
     ....
