@@ -1,4 +1,5 @@
 # AWC Router
+[![Build Status](https://dev.azure.com/colscott/a-wc-router/_apis/build/status/colscott.a-wc-router?branchName=master)](https://dev.azure.com/colscott/a-wc-router/_build/latest?definitionId=1&branchName=master)
 ## Features
 - Web Component
 - Code spltting/lazy loading
