@@ -36,6 +36,10 @@ Then enter this url in the browser:
     <head>
         <base href="/app/">
         <script type="module" src="/node_modules/a-wc-router/build/es6-bundled/src/router.js"></script>
+        OR use a CDN
+        <script type="module" src="https://unpkg.com/a-wc-router/src/router.js"></script>
+        <script type="module" src="https://cdn.jsdelivr.net/npm/a-wc-router/src/router.js"></script>
+        
         <script type="module" src="/src/my-page1.js"></script>
     </head>
     <body>
@@ -55,6 +59,10 @@ Then enter this url in the browser:
 
 ```js
 import '../node_modules/a-wc-router/build/es6-bundled/src/router.js';
+// Or use a CDN
+import 'https://unpkg.com/a-wc-router/src/router.js';
+import 'https://cdn.jsdelivr.net/npm/a-wc-router/src/router.js';
+
 import './my-page1.js';
 
 class MyApp extends HTMLElement {
