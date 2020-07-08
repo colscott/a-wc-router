@@ -32,7 +32,9 @@ export class RouteElement extends HTMLElement {
 
       this.dispatchEvent(onRouteAdded);
 
-      if (!this.hasAttribute('lazyload') || this.getAttribute('lazyload').toLowerCase() !== 'true') {
+      const lazyLoad = (this.getAttribute('lazyload')||'').toLowerCase() === 'true' || this.hasAttribute('lazy-load');
+
+      if (lazyLoad === false) {
         let importAttr = this.getAttribute('import');
         let tagName = this.getAttribute('element');
         NamedRouting.prefetchImport(importAttr, tagName);

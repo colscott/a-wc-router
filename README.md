@@ -118,7 +118,7 @@ customElements.define('my-app', MyApp);
 ## Code splitting and lazy loading modules for routes
 
 ```html
-<a-route path="/user" import="/path-to/user-main.js" lazyload="true" element="user-main"></a-route>
+<a-route path="/user" import="/path-to/user-main.js" lazy-load element="user-main"></a-route>
 ```
 
 ## Nested Routing
