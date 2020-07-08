@@ -42,7 +42,7 @@ Then enter this url in the browser:
         <a is="router-link" href="/app/page1">Page 1</a>
         <a is="router-link" href="/app/page2">Page 2</a>
         <a-router  style="display: block;">
-            <an-outlet>This content never shows because of the last catch all route</an-outlet>
+            <a-outlet>This content never shows because of the last catch all route</a-outlet>
             <a-route path="/page1" element="my-page1"></a-route>
             <a-route path="/page2" element="my-page2" import="/src/my-page2.js"></a-route>
             <a-route path="*"><template>Page not found</template></a-route>
@@ -64,7 +64,7 @@ class MyApp extends HTMLElement {
                 <a is="router-link" href="/app/page1">Page 1</a>
                 <a is="router-link" href="/app/page2">Page 2</a>
                 <a-router  style="display: block;">
-                    <an-outlet>This content never shows because of the last catch all route</an-outlet>
+                    <a-outlet>This content never shows because of the last catch all route</a-outlet>
                     <a-route path="/page1" element="my-page1"></a-route>
                     <a-route path="/page2" element="my-page2" import="/src/my-page2.js"></a-route>
                     <a-route path="*"><template>Page not found</template></a-route>
@@ -82,7 +82,7 @@ customElements.define('my-app', MyApp);
 
 ```html
 <a-router>
-    <an-outlet>Please click a link</an-outlet>
+    <a-outlet>Please click a link</a-outlet>
     <a-route path="/user" import="./userBundle.js" element="user-main"></a-route>
     <a-route path="/item" import="./itemsBundle.js" element="item-main"></a-route>
     <a-route path="/template"><template>Hello Template</template></a-route>
@@ -125,7 +125,7 @@ customElements.define('my-app', MyApp);
 
 ```html
 <a-router>
-    <an-outlet></an-outlet>
+    <a-outlet></a-outlet>
     <a-route path="/user" import="./userBundle.js" element="user-main"></a-route>
     <a-route path="/item" import="./itemsBundle.js" element="item-main"></a-route>
     <a-route path="*"><template></template></a-route>
@@ -136,7 +136,7 @@ connectedCallback() {
     if (this.connected && !this.innerHTML) {
         this.innerHTML = `
             <a-router>
-                <an-outlet></an-outlet>
+                <a-outlet></a-outlet>
                 <a-route path="/details" element="user-detials"></a-route>
                 <a-route path="/edit" element="user-edit"></a-route>
             </a-route>
@@ -161,7 +161,7 @@ Routing only takes place if a url also matches the document.baseURI.
 ## Routing using named outlets and HTML anchors
     
 ```html
-<an-outlet name="main">Please click a link</an-outlet>
+<a-outlet name="main">Please click a link</a-outlet>
 ....
 <a href="/(main:user-main)">Assign <user-main> element to outlet main</a>
 <a href="/(main:item-main)">Assign <item-main> element to outlet</a>
@@ -170,7 +170,7 @@ Routing only takes place if a url also matches the document.baseURI.
 ## Passing data to named outlets
     
 ```html
-<an-outlet name="main">Please click a link</an-outlet>
+<a-outlet name="main">Please click a link</a-outlet>
 ....
 <a href="/(main:user-main:userId=2&userName=tom)">Assign <user-main userId="2" userName="tom"> to outlet</a>
 ```
@@ -178,7 +178,7 @@ Routing only takes place if a url also matches the document.baseURI.
 ## Code splitting and eager loading modules for named outlets
     
 ```html
-<an-outlet name="main">Please click a link</an-outlet>
+<a-outlet name="main">Please click a link</a-outlet>
 ....
 <a class="item" is="router-link" href="(main:user-main(/path-to/user-main.js))">Load <user-main> from /path-to/user-main.js</a>
 <a class="item" is="router-link" href="(main:/path-to/user-main)">Load <user-main> from /path-to/user-main.js</a>
