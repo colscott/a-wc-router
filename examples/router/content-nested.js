@@ -19,7 +19,7 @@ class ContentNested extends HTMLElement {
         </div>
 <div code-example="Code to output links and outlet below">
 <a-router>
-    <an-outlet></an-outlet>
+    <a-outlet></a-outlet>
     <a-route path="/view_one" element="content-nested-viewone-example"></a-route>
     <a-route path="/view_two" element="content-nested-viewtwo-example"></a-route>
     <a-route path='*'></a-route>

@@ -116,4 +116,5 @@ export class OutletElement extends HTMLElement {
   }
 }
 
-window.customElements.define('an-outlet', OutletElement);
+window.customElements.define('a-outlet', OutletElement);
+window.customElements.define('an-outlet', class extends OutletElement{ constructor(){super();} });

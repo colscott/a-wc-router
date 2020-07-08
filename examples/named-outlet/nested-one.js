@@ -5,7 +5,7 @@ class NestedOne extends HTMLElement {
             <p>
 <div code-example="Code to output links and outlet below">
     <a-router>
-        <an-outlet></an-outlet>
+        <a-outlet></a-outlet>
         <a-route path="/webcomponent" element="content-web-component"></a-route>
         <a-route path="/webcomponent/import" import='/components/a-wc-router/src/test-dummy.js' element="content-web-component-import"></a-route>
         <a-route path="/nested" element="content-nested"></a-route>

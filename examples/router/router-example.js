@@ -41,7 +41,7 @@ class RouterExampleElement extends HTMLElement {
 </div>
 <a-router  style="display: block;">
     <!-- Outlet definition is first -->
-    <an-outlet>This content never shows because of the last catch all route</an-outlet>
+    <a-outlet>This content never shows because of the last catch all route</a-outlet>
     <!-- Route definitions are next. There are a variety of examples below.  -->
     <a-route path="/webcomponent" element="content-overview"></a-route>
     <a-route path="/webcomponent/import" import='/components/a-wc-router/src/test-dummy.js' element="content-web-component-import"></a-route>

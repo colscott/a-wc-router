@@ -18,9 +18,9 @@ class End2EndElement extends HTMLElement {
     render() {
         this.innerHTML = `
         <!-- Test set up -->
-        <an-outlet name="myoutlet1" id="myoutlet1"></an-outlet>
+        <a-outlet name="myoutlet1" id="myoutlet1"></a-outlet>
         <a-router id="router-a">
-          <an-outlet id="outletA"></an-outlet>
+          <a-outlet id="outletA"></a-outlet>
           <a-route path="/template" id="template-route"><template>Hello Template</template></a-route>
           <a-route path="/template"><template>Only hit if template route cancelled</template></a-route>
           <a-route path="/webcomponent" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
@@ -28,14 +28,14 @@ class End2EndElement extends HTMLElement {
             <template>
               <p>Content with nested router</p>
               <a-router name="router-a-b">
-                <an-outlet id="outletB"></an-outlet>
+                <a-outlet id="outletB"></a-outlet>
                 <a-route path="/template_nested"><template>Hello Nested</template></a-route>
                 <a-route path="/webcomponent_nested" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
                 <a-route path="/nested2/:param1">
                   <template>
                     <p>Nested router with data</p>
                     <a-router>
-                      <an-outlet id="outletC"></an-outlet>
+                      <a-outlet id="outletC"></a-outlet>
                       <a-route id="route-nested-component" path="/webcomponent-data2/:requiredParam" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
                     </a-route>
                   </template>
@@ -54,11 +54,11 @@ class End2EndElement extends HTMLElement {
       
         <template id="auxiliary-routing">
           <a-router id="routerb">
-            <an-outlet id="main"></an-outlet>
+            <a-outlet id="main"></a-outlet>
             <a-route path='/main'>
               <template>
                   <a-router>
-                      <an-outlet id="main_view1"></an-outlet>
+                      <a-outlet id="main_view1"></a-outlet>
                       <a-route path='/main_view1/:param'>
                         <template>Main View 1</template>
                       </a-route>
@@ -67,7 +67,7 @@ class End2EndElement extends HTMLElement {
                       </a-route>
                   </a-router>
                   <a-router>
-                      <an-outlet id="main2_view1"></an-outlet>
+                      <a-outlet id="main2_view1"></a-outlet>
                       <a-route path='/main2_view1/:param2'>
                         <template>Main2 View 1</template>
                       </a-route>
@@ -76,11 +76,11 @@ class End2EndElement extends HTMLElement {
             </a-route>
           </a-router>
           <a-router id="routerc">
-              <an-outlet id="sec"></an-outlet>
+              <a-outlet id="sec"></a-outlet>
               <a-route path='/secondary'>
                 <template>
                     <a-router>
-                      <an-outlet id="sec_v1"></an-outlet>
+                      <a-outlet id="sec_v1"></a-outlet>
                       <a-route path='/sec_view1/:param'>
                         <template>Sec View 1</template>
                       </a-route>
@@ -89,7 +89,7 @@ class End2EndElement extends HTMLElement {
                       </a-route>
                     </a-router>
                     <a-router>
-                      <an-outlet id="sec_v2"></an-outlet>
+                      <a-outlet id="sec_v2"></a-outlet>
                       <a-route path='/secondary2_view1/:param3'>
                         <template>Sec2 View 1</template>
                       </a-route>

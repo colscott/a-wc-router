@@ -830,7 +830,7 @@ export class RouterElement extends HTMLElement {
    */
   getOutletElement() {
     // @ts-ignore
-    return this._getRouterElements('an-outlet')[0];
+    return this._getRouterElements('a-outlet,an-outlet')[0];
   }
 
   /**
@@ -844,13 +844,15 @@ export class RouterElement extends HTMLElement {
   /**
    * Finds immediate child route elements
    */
-  _getRouterElements(tagName) {
+  _getRouterElements(tagNames) {
     let routeElements = [];
-    tagName = tagName.toLowerCase();
-    for (var i = 0, iLen = this.children.length; i < iLen; i++) {
+    tagNames = tagNames.toLowerCase().split(',');
+    for (let i = 0, iLen = this.children.length; i < iLen; i++) {
       let elem = this.children[i];
-      if (elem.tagName.toLowerCase() === tagName) {
-        routeElements.push(elem);
+      for (let j = 0, jLen = tagNames.length; j < jLen; j++) {
+        if (elem.tagName.toLowerCase() === tagNames[j]) {
+          routeElements.push(elem);
+        }
       }
     }
     return routeElements;

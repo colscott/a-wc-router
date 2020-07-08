@@ -55,7 +55,7 @@ class NamedOutletExampleElement extends HTMLElement {
     <a class="item" is="router-link" href="(main:content-import(/a-wc-router/examples/named-outlet/content-import.js):param1=attr1&param2=attr2&.param3=prop3&.param4=prop4)">Import with property and attribute Params</a>
     <a class="item" is="router-link" href="(main:content-guards)">Guards</a>
 </div>
-<an-outlet name="main" style="display: block;"><p>Outlet not assigned yet.<br><br>Please click a link above to assign content to this outlet.</p></an-outlet>
+<a-outlet name="main" style="display: block;"><p>Outlet not assigned yet.<br><br>Please click a link above to assign content to this outlet.</p></a-outlet>
         </div>
     </div>
 </div>
