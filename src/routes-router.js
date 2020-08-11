@@ -920,6 +920,13 @@ export class RouterElement extends HTMLElement {
       href = anchor.href;
     }
 
+    // Ensure href is a valid URL
+    try {
+      new URL(href);
+    } catch (e) {
+      href = new URL(href, new URL(document.baseURI).origin)
+    }
+
     // If link is different to base path, don't intercept.
     if (href.indexOf(document.baseURI) !== 0) {
       return '';
