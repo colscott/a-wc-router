@@ -896,6 +896,12 @@ export class RouterElement extends HTMLElement {
       }
     } else if (typeof hrefSource === 'string') {
       href = hrefSource;
+      // Ensure href is a valid URL
+      try {
+        new URL(href);
+      } catch (e) {
+        href = new URL(href, new URL(document.baseURI).origin).href;
+      }
     } else {
       anchor = hrefSource;
     }
@@ -918,13 +924,6 @@ export class RouterElement extends HTMLElement {
       }
 
       href = anchor.href;
-    }
-
-    // Ensure href is a valid URL
-    try {
-      new URL(href);
-    } catch (e) {
-      href = new URL(href, new URL(document.baseURI).origin)
     }
 
     // If link is different to base path, don't intercept.
