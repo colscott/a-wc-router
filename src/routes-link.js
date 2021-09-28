@@ -1,34 +1,26 @@
-///@ts-check
-import {RouterElement} from './routes-router.js';
+import { RouterElement } from './routes-router.js';
 
-/** Helper to dispatch events that will signal the registering of links. */
-const dispatchRegisterLink = function(link) {
-  window.dispatchEvent(
-    new CustomEvent(
-        'routerLinksAdded', {
-            detail: {
-                links: [link] }}));
-}
-
+/** */
 class RouterLinkElement extends HTMLAnchorElement {
   /** @inheritdoc */
   connectedCallback() {
     RouterElement.initialize();
-    dispatchRegisterLink(this);
-    
+    this.register();
   }
 
   /** @inheritdoc */
-  static get observedAttributes() { return ['href']; }
+  static get observedAttributes() {
+    return ['href'];
+  }
 
   /**
    * @inheritdoc
-   * Listens for href attribute changing. If it does then it re-regesters the link.
+   * Listens for href attribute changing. If it does then it re-registers the link.
    */
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'href') {
       if (oldValue && newValue) {
-        dispatchRegisterLink(this);
+        this.register();
       }
     }
   }
@@ -36,6 +28,17 @@ class RouterLinkElement extends HTMLAnchorElement {
   /** @inheritdoc */
   constructor() {
     super();
+  }
+
+  /** Helper to dispatch events that will signal the registering of links. */
+  register() {
+    window.dispatchEvent(
+      new CustomEvent('routerLinksAdded', {
+        detail: {
+          links: [this],
+        },
+      }),
+    );
   }
 }
 

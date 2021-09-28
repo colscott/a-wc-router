@@ -1,18 +1,19 @@
-///@ts-check
-import { NamedRouting } from "./named-routing.js";
+import { NamedRouting } from './named-routing.js';
 
+/** @typedef {Map<string, string>} MatchData */
 /**
-   * @typedef {Object} Match
-   * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
-   * @property {string} remainder - If the route performed a partial match, the remainder of the URL that was not atched is stored in this property.
-   * @property {Object} data - Any data found and matched in the URL.
-   * @property {?string} redirect - A URL to redirect to.
-   * @property {boolean} useCache - Indicator as to wether the current HTML content can be reused.
-   */
+ * @typedef {Object} Match
+ * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
+ * @property {string} remainder - If the route performed a partial match, the remainder of the URL that was not attached is stored in this property.
+ * @property {Map<string, string>} data - Any data found and matched in the URL.
+ * @property {?string} redirect - A URL to redirect to.
+ * @property {boolean} useCache - Indicator as to wether the current HTML content can be reused.
+ */
 
+/**  */
 export class RouteElement extends HTMLElement {
-
-  connectedCallback(){
+  /** Initialize */
+  connectedCallback() {
     if (!this.created) {
       this.created = true;
       this.style.display = 'none';
@@ -21,37 +22,41 @@ export class RouteElement extends HTMLElement {
     }
 
     if (this.isConnected) {
-
-      let onRouteAdded = new CustomEvent('onRouteAdded', {
+      const onRouteAdded = new CustomEvent('onRouteAdded', {
         bubbles: true,
         composed: true,
         detail: {
-          route: this
-        }
+          route: this,
+        },
       });
 
       this.dispatchEvent(onRouteAdded);
 
-      const lazyLoad = (this.getAttribute('lazyload')||'').toLowerCase() === 'true' || this.hasAttribute('lazy-load');
+      const lazyLoad = (this.getAttribute('lazyload') || '').toLowerCase() === 'true' || this.hasAttribute('lazy-load');
 
       if (lazyLoad === false) {
-        let importAttr = this.getAttribute('import');
-        let tagName = this.getAttribute('element');
+        const importAttr = this.getAttribute('import');
+        const tagName = this.getAttribute('element');
         NamedRouting.prefetchImport(importAttr, tagName);
       }
     }
   }
 
-  disconnectedCallback() {
-    
-  }
-
+  /** Initialize */
   constructor() {
     super();
 
     this.canLeave = NamedRouting.canLeave.bind(this);
+
+    /** @type {string|DocumentFragment|Node} */
+    this.content = null;
   }
 
+  /**
+   * @private
+   * @param {string} url to break into segments
+   * @returns {Array<string>} string broken into segments
+   */
   _createPathSegments(url) {
     return url.replace(/(^\/+|\/+$)/g, '').split('/');
   }
@@ -62,22 +67,22 @@ export class RouteElement extends HTMLElement {
    * @param {string} url - The url to perform matching against
    * @returns {Match} match - The resulting match. Null will be returned if no match was made.
    */
-  match(url) {    
+  match(url) {
     const urlSegments = this._createPathSegments(url);
 
     const path = this.getAttribute('path');
     if (!path) {
-      console.info("route must contain a path");
-      throw 'Route has no path defined. Add a path attribute to route';
-    } 
+      console.info('route must contain a path');
+      throw new Error('Route has no path defined. Add a path attribute to route');
+    }
 
     let match = null;
-    let fullMatch = {
-      url: url,
+    const fullMatch = {
+      url,
       remainder: '',
-      data: null,
+      data: new Map(),
       redirect: null,
-      useCache: false
+      useCache: false,
     };
 
     if (path === '*') {
@@ -86,31 +91,35 @@ export class RouteElement extends HTMLElement {
       match = fullMatch;
     } else {
       const pathSegments = this._createPathSegments(path);
-      //console.info(urlSegments, pathSegments);
+      // console.info(urlSegments, pathSegments);
       const data = new Map();
 
-      let max = Math.max(urlSegments.length, pathSegments.length);
-      let ret;
+      const max = Math.max(urlSegments.length, pathSegments.length);
       for (let i = 0; i < max; i++) {
         if (pathSegments[i] && pathSegments[i].charAt(0) === ':') {
-            let param = pathSegments[i].replace(/(^\:|[+*?]+$)/g, '');
-            let flags = (pathSegments[i].match(/[+*?]+$/) || [])[0] || '';
-            let plus = ~flags.indexOf('+');
-            let star = ~flags.indexOf('*');
-            let val = urlSegments[i] || '';
-            if (!val && !star && (flags.indexOf('?') < 0 || plus)) {
-              match = null;
-              break;
-            }
-            data.set(param, decodeURIComponent(val));
-            if (plus || star) {
-              data.set(param, urlSegments.slice(i).map(decodeURIComponent).join('/'));
-              match = match || fullMatch;
-              match.data = data;
-              break;
-            }
-        }
-        else if (pathSegments[i] !== urlSegments[i]) {
+          const param = pathSegments[i].replace(/(^\:|[+*?]+$)/g, '');
+          const flags = (pathSegments[i].match(/[+*?]+$/) || [])[0] || '';
+          const plus = flags.includes('+');
+          const star = flags.includes('*');
+          const val = urlSegments[i] || '';
+          if (!val && !star && (flags.indexOf('?') < 0 || plus)) {
+            match = null;
+            break;
+          }
+          data.set(param, decodeURIComponent(val));
+          if (plus || star) {
+            data.set(
+              param,
+              urlSegments
+                .slice(i)
+                .map(decodeURIComponent)
+                .join('/'),
+            );
+            match = match || fullMatch;
+            match.data = data;
+            break;
+          }
+        } else if (pathSegments[i] !== urlSegments[i]) {
           if (i > 0 && !this.hasAttribute('fullmatch')) {
             match = match || fullMatch;
             match.data = data;
@@ -119,7 +128,7 @@ export class RouteElement extends HTMLElement {
           }
           break;
         }
-        
+
         if (i === max - 1) {
           match = match || fullMatch;
           match.data = data;
@@ -137,9 +146,12 @@ export class RouteElement extends HTMLElement {
        * @property {Match} details.match - The resulting match. Warning, modifications to the Match will take effect.
        * @property {string} details.path - The RouteElement path attribute value that was matched against.
        */
-      var routeMatchedEvent = new CustomEvent(
-        'onRouteMatch',
-        { bubbles: true, cancelable: true, composed: true, detail: { route: this, match: match, path: path }});
+      const routeMatchedEvent = new CustomEvent('onRouteMatch', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail: { route: this, match, path },
+      });
       this.dispatchEvent(routeMatchedEvent);
 
       if (routeMatchedEvent.defaultPrevented) {
@@ -152,8 +164,8 @@ export class RouteElement extends HTMLElement {
     }
 
     if (match) {
-      let useCache = this.lastMatch && this.lastMatch.url === match.url && !this.hasAttribute('disableCache');
-      match.useCache = useCache;
+      const useCache = this.lastMatch && this.lastMatch.url === match.url && !this.hasAttribute('disableCache');
+      match.useCache = !!useCache;
     }
 
     this.lastMatch = match;
@@ -161,6 +173,7 @@ export class RouteElement extends HTMLElement {
     return match;
   }
 
+  /** Clear the last match which will reset cache state */
   clearLastMatch() {
     this.lastMatch = null;
   }
@@ -171,11 +184,11 @@ export class RouteElement extends HTMLElement {
    * @returns {Promise<string|DocumentFragment|Node>} - The resulting generated content.
    */
   async getContent(attributes = {}) {
-    let content = this.content;
+    let { content } = this;
 
     if (!content) {
-      let importAttr = this.getAttribute('import');
-      let tagName = this.getAttribute('element');
+      const importAttr = this.getAttribute('import');
+      const tagName = this.getAttribute('element');
 
       await NamedRouting.importCustomElement(importAttr, tagName);
 
@@ -184,11 +197,11 @@ export class RouteElement extends HTMLElement {
         // content = tagName(attributes);
         content = document.createElement(tagName);
         if (customElements.get(tagName) === undefined) {
-          console.error(`Custom Element not found: ${tagName}. Are you missing an import or mis-spelled tag name?`);
+          console.error(`Custom Element not found: ${tagName}. Are you missing an import or mis-spelled the tag name?`);
         }
       }
 
-      let template = this.children[0];
+      const template = this.children[0];
       if (template && template instanceof HTMLTemplateElement) {
         return template.content.cloneNode(true);
       }
@@ -198,17 +211,24 @@ export class RouteElement extends HTMLElement {
       RouteElement.setData(content, attributes);
     }
 
-    return this.content = content;
+    this.content = content;
+    return this.content;
   }
 
+  /**
+   * @param {string|DocumentFragment|Node} target element to set the data on
+   * @param {MatchData} data to set on the element
+   */
   static setData(target, data) {
-    data.forEach((v,k) => {
+    if (data && target instanceof Element) {
+      data.forEach((v, k) => {
         if (k[0] === '.') {
           target[k.substr(1)] = v;
         } else {
           target.setAttribute(k, v);
         }
       });
+    }
   }
 }
 
