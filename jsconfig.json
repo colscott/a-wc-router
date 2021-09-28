@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "es2020",
+    "lib": ["esnext.array", "esnext", "es2017", "dom"],
+    "rootDir": "./",
+    "moduleResolution": "node",
+    "checkJs": true
+  },
+  "include": [
+      "src/**/*",
+      "examples/**/*",
+      "test/**/*"
+  ]
+}
