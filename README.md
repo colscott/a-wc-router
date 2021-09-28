@@ -109,6 +109,8 @@ customElements.define('my-app', MyApp);
 <a-route path="/user3/:atLeastOneParam+" element="user-main"></a-route>
 <a-route path="/user4/:anyNumOfParam*" element="user-main"></a-route>
 <a-route path="/user5/:firstParam/:secondParam" element="user-main"></a-route>
+<!-- use a '.' as first char to set data as a property of the element instead of  an attribute -->
+<a-route path="/user5/:.dataAsPropertyInsteadOfAttribute" element="user-main"></a-route>
 ....
 <a href="user1/12">click for user with required param</a>
 <a href="user2">click for user with optional param</a>
