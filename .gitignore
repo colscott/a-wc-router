@@ -1,4 +1,5 @@
 .vscode/*
 build
+dist
 node_modules
 Untitled-1.txt

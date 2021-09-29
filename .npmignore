@@ -3,5 +3,5 @@ node_modules
 test
 azure-pipelines.yml
 karma-unit.conf.js
-polymer.json
+rollup.config.js
 Untitled-1.txt

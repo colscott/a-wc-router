@@ -18,12 +18,12 @@
     "karma-ie-launcher": "^1.0.0",
     "karma-jasmine": "^2.0.1",
     "pwa-helpers": "^0.9.1",
+    "rollup": "^2.57.0",
     "uglify-es": "^3.3.9"
   },
   "scripts": {
-    "build": "polymer build",
+    "build": "rollup -c",
     "start": "node exampleServer",
-    "dist": "uglifyjs src/named-routing.js src/routes-router.js src/routes-route.js src/routes-outlet.js src/routes-link.js -o dist/router.js -c -m",
     "test": "npm run test:unit",
     "test:unit": "node ./node_modules/karma/bin/karma start karma-unit.conf.js"
   },
