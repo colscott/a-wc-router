@@ -335,5 +335,5 @@ export class NamedRouting {
 
 NamedRouting.pageReadyPromise = undefined;
 NamedRouting.registry = {};
-/** @type {{[k: string]: Assignment}>} */
+/** @type {{[k: string]: Assignment}} */
 NamedRouting.assignments = {};

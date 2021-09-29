@@ -2,7 +2,7 @@
 [![Build Status](https://dev.azure.com/colscott/a-wc-router/_apis/build/status/colscott.a-wc-router?branchName=master)](https://dev.azure.com/colscott/a-wc-router/_build/latest?definitionId=1&branchName=master)
 ## Features
 - Web Component
-- Code spltting/lazy loading
+- Code splitting/lazy loading
 - Declarative routing
 - Nested routing
 - Named/auxiliary routing and outlets
@@ -10,7 +10,7 @@
 - Guards
 - Works with regular anchor tags for links
 - Automatically styling active links
-- Zero dependenies
+- Zero dependencies
 
 ## Examples
 Examples and further documentation can be found in the examples folder and are hosted [here](https://colscott.github.io/a-wc-router/examples/)
@@ -147,7 +147,7 @@ connectedCallback() {
         this.innerHTML = `
             <a-router>
                 <a-outlet></a-outlet>
-                <a-route path="/details" element="user-detials"></a-route>
+                <a-route path="/details" element="user-details"></a-route>
                 <a-route path="/edit" element="user-edit"></a-route>
             </a-route>
             `;
@@ -167,7 +167,7 @@ Routing only takes place if a url also matches the document.baseURI.
 <a href='/MyAppRoot/user'>Will route</a>
 ```
 
-# Named outlets (no router or routes requried)
+# Named outlets (no router or routes required)
 ## Routing using named outlets and HTML anchors
     
 ```html

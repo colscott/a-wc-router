@@ -18,11 +18,16 @@
     "karma-ie-launcher": "^1.0.0",
     "karma-jasmine": "^2.0.1",
     "pwa-helpers": "^0.9.1",
+    "rimraf": "^3.0.2",
     "rollup": "^2.57.0",
+    "typescript": "^4.4.3",
     "uglify-es": "^3.3.9"
   },
   "scripts": {
     "build": "rollup -c",
+    "generateTypes": "npx tsc -p d.tsconfig.json",
+    "removeTypes": "rimraf ./src/**/*d.ts",
+    "prepublishOnly": "npm run generateTypes",
     "start": "node exampleServer",
     "test": "npm run test:unit",
     "test:unit": "node ./node_modules/karma/bin/karma start karma-unit.conf.js"
