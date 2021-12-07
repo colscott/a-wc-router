@@ -233,9 +233,9 @@ export class RouterElement extends HTMLElement {
     oldRoute._lastChangedAt = now;
 
     if (shouldReplace) {
-      window.history.replaceState({}, '', fullNewUrl);
+      window.history.replaceState(history.state, '', fullNewUrl);
     } else {
-      window.history.pushState({}, '', fullNewUrl);
+      window.history.pushState(history.state, '', fullNewUrl);
     }
   }
 
