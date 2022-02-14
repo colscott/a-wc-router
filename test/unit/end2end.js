@@ -50,6 +50,8 @@ class End2EndElement extends HTMLElement {
           <a-route path="/webcomponent-data3/:atLeastOneParam+" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
           <a-route path="/webcomponent-data4/:anyNumOfParam*" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
           <a-route path="/webcomponent-data5/:firstParam/:secondParam/:.thirdparam" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/a/b"><template>Foobar</template></a-route>
+          <a-route path="/a/c"><template>Barfoo</template></a-route>
           <a-route id="catch-all" path='*'><template>catch all - NotFound2</template></a-route>
         </a-router>
       
@@ -388,6 +390,12 @@ describe('routes-router', () => {
 
     it("shouldn't handle different base urls", () => {
       return clickAndNotHandle({ href: '/myotherapp/template' });
+    });
+
+  
+    it('should correctly match multi level path name', async () => {
+      await clickAndTest({ href: 'a/b' }, 'Foobar', 'outletA');
+      await clickAndTest({ href: 'a/c' }, 'Barfoo', 'outletA');
     });
   });
 

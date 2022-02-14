@@ -24,7 +24,7 @@ class ContentOverviewElement extends ContentBasicElement {
             </tr>
             <tr>
                 <td>fullmatch</td>
-                <td>Optional - This route must fully match the url without remiander to successfully match.
+                <td>Optional - This route must fully match the url without remainder to successfully match.
                 <td>fullmatch</td>
             </tr>
             <tr>
@@ -44,7 +44,7 @@ class ContentOverviewElement extends ContentBasicElement {
             </tr>
             <tr>
                 <td>redirect</td>
-                <td>Optional - This route willperform a redirect.
+                <td>Optional - This route will perform a redirect.
                 <td>redirect="/users"</td>
             </tr>
             <tr>

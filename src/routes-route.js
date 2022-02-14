@@ -76,7 +76,6 @@ export class RouteElement extends HTMLElement {
       throw new Error('Route has no path defined. Add a path attribute to route');
     }
 
-    let match = null;
     const fullMatch = {
       url,
       remainder: '',
@@ -85,6 +84,8 @@ export class RouteElement extends HTMLElement {
       useCache: false,
     };
 
+    let match = fullMatch;
+
     if (path === '*') {
       match = fullMatch;
     } else if (path === url) {
@@ -92,11 +93,14 @@ export class RouteElement extends HTMLElement {
     } else {
       const pathSegments = this._createPathSegments(path);
       // console.info(urlSegments, pathSegments);
-      const data = new Map();
+      const data = match.data;
 
-      const max = Math.max(urlSegments.length, pathSegments.length);
-      for (let i = 0; i < max; i++) {
+      const max = pathSegments.length;
+      let i = 0;
+      for (; i < max; i++) {
+        
         if (pathSegments[i] && pathSegments[i].charAt(0) === ':') {
+          // Handle bound values
           const param = pathSegments[i].replace(/(^\:|[+*?]+$)/g, '');
           const flags = (pathSegments[i].match(/[+*?]+$/) || [])[0] || '';
           const plus = flags.includes('+');
@@ -115,23 +119,33 @@ export class RouteElement extends HTMLElement {
                 .map(decodeURIComponent)
                 .join('/'),
             );
-            match = match || fullMatch;
-            match.data = data;
+            // increase i so that we know later that we have consumed all of the url segments when we're checking if we have a full match.
+            i = urlSegments.length;
             break;
           }
         } else if (pathSegments[i] !== urlSegments[i]) {
-          if (i > 0 && !this.hasAttribute('fullmatch')) {
-            match = match || fullMatch;
-            match.data = data;
-            match.url = urlSegments.slice(0, i).join('/');
-            match.remainder = urlSegments.slice(i).join('/');
-          }
+          // Handle path segment
+          match = null;
           break;
         }
+      }
 
-        if (i === max - 1) {
+      // Check all required path segments were fulfilled
+      if (match) {
+        if (i >= urlSegments.length) {
+          // Full match
+        } else if (this.hasAttribute('fullmatch')) {
+          // Partial match but needed full match
+          match = null;
+        } else if (i === max) {
+          // Partial match
           match = match || fullMatch;
           match.data = data;
+          match.url = urlSegments.slice(0, i).join('/');
+          match.remainder = urlSegments.slice(i).join('/'); 
+        } else {
+          // No match
+          match = null;
         }
       }
     }
