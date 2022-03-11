@@ -264,7 +264,7 @@ export class RouterElement extends HTMLElement {
         namedMatch: await NamedRouting.parseNamedItem(urlFragment, true),
       })),
     );
-    console.warn(namedMatches);
+
     namedMatches.forEach(({ urlFragment, namedMatch }) => {
       _links.every(link => {
         if (link && link.a.classList.contains(linkClass(link.a)) === false) {
