@@ -884,6 +884,7 @@ export class RouterElement extends HTMLElement {
    */
   static _getSameOriginLinkHref(hrefSource) {
     let href = null;
+    /** @type HTMLAnchorElement */
     let anchor = null;
     if (hrefSource instanceof Event) {
       const event = hrefSource;
@@ -902,7 +903,7 @@ export class RouterElement extends HTMLElement {
       for (let i = 0; i < eventPath.length; i++) {
         const element = eventPath[i];
 
-        if (element.tagName === 'A' && element.href) {
+        if (element instanceof HTMLAnchorElement) {
           anchor = element;
           break;
         }
