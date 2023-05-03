@@ -898,8 +898,7 @@ export class RouterElement extends HTMLElement {
         return null;
       }
 
-      // @ts-ignore
-      const eventPath = event.path;
+      const eventPath = event.composedPath();
       for (let i = 0; i < eventPath.length; i++) {
         const element = eventPath[i];
 
