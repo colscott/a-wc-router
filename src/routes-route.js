@@ -98,22 +98,27 @@ export class RouteElement extends HTMLElement {
       const max = pathSegments.length;
       let i = 0;
       for (; i < max; i++) {
-        
         if (pathSegments[i] && pathSegments[i].charAt(0) === ':') {
           // Handle bound values
-          const param = pathSegments[i].replace(/(^\:|[+*?]+$)/g, '');
-          const flags = (pathSegments[i].match(/[+*?]+$/) || [])[0] || '';
-          const plus = flags.includes('+');
-          const star = flags.includes('*');
-          const val = urlSegments[i] || '';
-          if (!val && !star && (flags.indexOf('?') < 0 || plus)) {
+          const paramName = pathSegments[i].replace(/(^\:|[+*?]+\S*$)/g, '');
+          const flags = (pathSegments[i].match(/([+*?])\S*$/) || [])[1] || '';
+          const oneOrMore = flags.includes('+');
+          const anyNumber = flags.includes('*');
+          const oneOrNone = flags.includes('?');
+          const defaultValue = oneOrNone && (pathSegments[i].match(/[+*?]+(\S+)$/) || [])[1] || '';
+          let value = urlSegments[i] || '';
+          const required = !anyNumber && !oneOrNone;
+          if (!value && defaultValue) {
+            value = defaultValue;
+          }
+          if (!value && required) {
             match = null;
             break;
           }
-          data.set(param, decodeURIComponent(val));
-          if (plus || star) {
+          data.set(paramName, decodeURIComponent(value));
+          if (oneOrMore || anyNumber) {
             data.set(
-              param,
+              paramName,
               urlSegments
                 .slice(i)
                 .map(decodeURIComponent)

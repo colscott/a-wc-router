@@ -18,7 +18,7 @@ describe('routes-route', () => {
     expect(routeElement.match('/a/b/1/e/f').remainder).toBe('e/f');
   });
 
-  it('optional parameters', async () => {
+  it('optional parameters', () => {
     const routeElement = createRouteElement();
 
     routeElement.setAttribute('path', '/a/b/:t?');
@@ -46,7 +46,7 @@ describe('routes-route', () => {
     expect(result).toBeNull();
   });
 
-  it('required parameters', async () => {
+  it('required parameters', () => {
     const routeElement = createRouteElement();
 
     routeElement.setAttribute('path', '/a/b/:t');
@@ -70,7 +70,7 @@ describe('routes-route', () => {
     expect(result.data).toEqual(new Map([['t', '3'], ['v', '4']]));
   });
 
-  it('one or more parameters', async () => {
+  it('one or more parameters', () => {
     const routeElement = createRouteElement();
 
     routeElement.setAttribute('path', '/a/b/:t+');
@@ -79,13 +79,27 @@ describe('routes-route', () => {
     expect(routeElement.match('/a/b/1/2/3').data).toEqual(new Map([['t', '1/2/3']]));
   });
 
-  it('any number of parameters', async () => {
+  it('any number of parameters', () => {
     const routeElement = createRouteElement();
 
     routeElement.setAttribute('path', '/a/b/:t*');
-    expect(routeElement.match('/a/b').url).toBe('/a/b');
-    expect(routeElement.match('/a/b').data).toEqual(new Map([['t', '']]));
-    expect(routeElement.match('/a/b/1/2/3').url).toBe('/a/b/1/2/3');
-    expect(routeElement.match('/a/b/1/2/3').data).toEqual(new Map([['t', '1/2/3']]));
+    let match = routeElement.match('/a/b');
+    expect(match.url).toBe('/a/b');
+    expect(match.data).toEqual(new Map([['t', '']]));
+    match = routeElement.match('/a/b/1/2/3');
+    expect(match.url).toBe('/a/b/1/2/3');
+    expect(match.data).toEqual(new Map([['t', '1/2/3']]));
+  });
+
+  it('default parameter values', () => {
+    const routeElement = createRouteElement();
+
+    routeElement.setAttribute('path', '/a/b/:t?foobar');
+    let match = routeElement.match('/a/b');
+    expect(match.url).toBe('/a/b');
+    expect(match.data).toEqual(new Map([['t', 'foobar']]));
+    match = routeElement.match('/a/b/1');
+    expect(match.url).toBe('/a/b/1');
+    expect(match.data).toEqual(new Map([['t', '1']]));
   });
 });

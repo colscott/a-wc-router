@@ -106,6 +106,7 @@ customElements.define('my-app', MyApp);
 ```html
 <a-route path="/user1/:requiredParam" element="user-main"></a-route>
 <a-route path="/user2/:optionalParam?" element="user-main"></a-route>
+<a-route path="/user2/:optionalParam?defaultValue" element="user-main"></a-route>
 <a-route path="/user3/:atLeastOneParam+" element="user-main"></a-route>
 <a-route path="/user4/:anyNumOfParam*" element="user-main"></a-route>
 <a-route path="/user5/:firstParam/:secondParam" element="user-main"></a-route>
