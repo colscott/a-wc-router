@@ -50,6 +50,8 @@ class End2EndElement extends HTMLElement {
           <a-route path="/webcomponent-data3/:atLeastOneParam+" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
           <a-route path="/webcomponent-data4/:anyNumOfParam*" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
           <a-route path="/webcomponent-data5/:firstParam/:secondParam/:.thirdparam" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data6/:firstParam?foobar" data-secondParam="foo" data-thirdParam="bar" import='/base/test/assets/test-dummy.js' element="test-dummy"></a-route>
+          <a-route path="/webcomponent-data7/:firstParam?foobar" import='/base/test/assets/test-dummy.js' element="test-dummy" id="data-property" ></a-route>
           <a-route path="/a/b"><template>Foobar</template></a-route>
           <a-route path="/a/c"><template>Barfoo</template></a-route>
           <a-route id="catch-all" path='*'><template>catch all - NotFound2</template></a-route>
@@ -110,6 +112,15 @@ const baseUrl = document.createElement('base');
 baseUrl.setAttribute('href', '/myapp/');
 document.head.appendChild(baseUrl);
 document.body.appendChild(document.createElement('end-to-end'));
+
+document.querySelector('#data-property').data = {
+  propA: 'foobar',
+  propB: 123,
+  propC: true,
+  propD: null,
+  propE: undefined,
+  propF: new Date(),
+};
 
 /**
  * @param {HTMLAnchorElement} link
@@ -476,6 +487,34 @@ describe('routes-router', () => {
         },
         'outletA',
       ));
+
+    it('Supports setting dataset attributes', () =>
+      clickAndTest(
+        { href: 'webcomponent-data6' },
+        outlet => {
+          const testDummy = outlet.querySelector('test-dummy');
+          expect(testDummy.getAttribute('firstParam')).toEqual('foobar');
+          expect(testDummy.getAttribute('secondParam')).toEqual('foo');
+          expect(testDummy.getAttribute('thirdParam')).toEqual('bar');
+        },
+        'outletA',
+      ));
+
+    it('Supports setting data properties', () =>
+      clickAndTest(
+        { href: 'webcomponent-data7' },
+        outlet => {
+          const testDummy = outlet.querySelector('test-dummy');
+          expect(testDummy.getAttribute('firstParam')).toEqual('foobar');
+          expect(testDummy.propA).toBe('foobar');
+          expect(testDummy.propB).toBe(123);
+          expect(testDummy.propC).toBeTrue();
+          expect(testDummy.propD).toBeNull();
+          expect(testDummy.propE).toBeUndefined();
+          expect(testDummy.propF).toBeInstanceOf(Date);
+        },
+        'outletA',
+      ));
   });
 
   describe('Route Caching', () => {
@@ -573,5 +612,9 @@ describe('routes-route', () => {
   describe('route matching', () => {
     // it('full matches', function () {
     // });
+  });
+
+  it('should apply dataset properties' , () => {
+
   });
 });

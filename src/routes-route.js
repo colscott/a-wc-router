@@ -1,6 +1,6 @@
 import { NamedRouting } from './named-routing.js';
 
-/** @typedef {Map<string, string>} MatchData */
+/** @typedef {Map<string, string>|HTMLOrSVGElement['dataset']} MatchData */
 /**
  * @typedef {Object} Match
  * @property {string} url - The url that was matched and consumed by this route. The match.url and the match.remainder will together equal the URL that the route originally matched against.
@@ -50,6 +50,8 @@ export class RouteElement extends HTMLElement {
 
     /** @type {string|DocumentFragment|Node} */
     this.content = null;
+
+    this.data = null;
   }
 
   /**
@@ -199,10 +201,10 @@ export class RouteElement extends HTMLElement {
 
   /**
    * Generates content for this route.
-   * @param {Object} attributes - Object of properties that will be applied to the content. Only applies if the content was not generated form a Template.
+   * @param {Map<string, string>} [attributes] - Object of properties that will be applied to the content. Only applies if the content was not generated form a Template.
    * @returns {Promise<string|DocumentFragment|Node>} - The resulting generated content.
    */
-  async getContent(attributes = {}) {
+  async getContent(attributes) {
     let { content } = this;
 
     if (!content) {
@@ -230,6 +232,14 @@ export class RouteElement extends HTMLElement {
       RouteElement.setData(content, attributes);
     }
 
+    if (this.data && content instanceof HTMLElement) {
+      Object.entries(this.data).forEach(([name, value]) => {
+        content[name] = value;
+      });
+    }
+
+    RouteElement.setData(content, this.dataset);
+
     this.content = content;
     return this.content;
   }
@@ -240,13 +250,23 @@ export class RouteElement extends HTMLElement {
    */
   static setData(target, data) {
     if (data && target instanceof Element) {
-      data.forEach((v, k) => {
-        if (k[0] === '.') {
-          target[k.substr(1)] = v;
+      /**
+       * @param {string} key property name to set the value for
+       * @param {unknown} value value to set
+       */
+      const setProperty = (key, value) => {
+        if (key[0] === '.') {
+          target[key.substring(1)] = value;
         } else {
-          target.setAttribute(k, v);
+          target.setAttribute(key, value.toString());
         }
-      });
+      }
+
+      if (data instanceof Map) {
+        data.forEach(((value, key) => setProperty(key, value)));
+      } else {
+        Object.entries(data).forEach(([key, value]) => setProperty(key, value));
+      }
     }
   }
 }

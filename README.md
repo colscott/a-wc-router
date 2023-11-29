@@ -112,7 +112,22 @@ customElements.define('my-app', MyApp);
 <a-route path="/user5/:firstParam/:secondParam" element="user-main"></a-route>
 <!-- use a '.' as first char to set data as a property of the element instead of  an attribute -->
 <a-route path="/user5/:.dataAsPropertyInsteadOfAttribute" element="user-main"></a-route>
-....
+
+<!-- constant params via attributes -->
+<a-route path="/user6" data-firstParam="valueA" data-secondParam="valueB" element="user-main">
+    <!-- This create <user-main firstParam="valueA" secondParam="valueB"> but will be overridden by values in the route -->
+</a-route>
+<script>
+    // Constant params via set properties
+    const myRoute = document.querySelector('a-route');
+    // Set constant param programmatically
+    myRoute.firstParam = 'valueA';
+    myRoute.secondParam = new Date();
+    // This will set the firstParam and secondParam as properties on the route content
+</script>
+```
+
+```html
 <a href="user1/12">click for user with required param</a>
 <a href="user2">click for user with optional param</a>
 <a href="user3/12/tom">click for user with at least one param</a>
