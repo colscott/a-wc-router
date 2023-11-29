@@ -1,6 +1,6 @@
 {
   "name": "a-wc-router",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "AWC Router, Simple, Declarative, Decoupled, Web Component Router, PRPL, Router, Routing, Outlet",
   "main": "./src/router.js",
   "directories": {
