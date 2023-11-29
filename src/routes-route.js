@@ -228,10 +228,6 @@ export class RouteElement extends HTMLElement {
       }
     }
 
-    if (attributes) {
-      RouteElement.setData(content, attributes);
-    }
-
     if (this.data && content instanceof HTMLElement) {
       Object.entries(this.data).forEach(([name, value]) => {
         content[name] = value;
@@ -239,6 +235,11 @@ export class RouteElement extends HTMLElement {
     }
 
     RouteElement.setData(content, this.dataset);
+
+    // Set attributes last so they override any static properties with the same name
+    if (attributes) {
+      RouteElement.setData(content, attributes);
+    }
 
     this.content = content;
     return this.content;
